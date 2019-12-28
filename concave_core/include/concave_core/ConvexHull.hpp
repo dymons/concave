@@ -167,7 +167,8 @@ namespace concave {
           ++current_point_it;
         }
 
-        *second_point++ = *current_point_it;
+        *second_point = *current_point_it;
+        ++second_point;
       }
 
       if (std::distance(points_copy.begin(), second_point) < 3) {
