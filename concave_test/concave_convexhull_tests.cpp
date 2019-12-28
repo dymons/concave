@@ -22,7 +22,15 @@
 using point_cgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
 using point_opencv = cv::Point_<double>;
 
-class ConvexHullTests : public ::testing::Test { };
+template <class InputIt, class OutputIt, class Predicate>
+  OutputIt transform_copy (InputIt first, InputIt last, OutputIt d_first, Predicate pred)
+  {
+    while (first != last) {
+      *d_first++ = pred(*first);
+      ++first;
+    }
+    return d_first;
+  }
 
 namespace CGAL {
   std::istream& operator>>(std::istream& t_istream, point_cgal& t_point)
@@ -42,197 +50,202 @@ namespace cv {
   }
 }
 
-TEST_F(ConvexHullTests, convex_hull_graham_scan_custom_point)
+class ConvexHullTests : public ::testing::Test { };
+
+// Verifying that all algorithms produce the same result.
+TEST_F(ConvexHullTests, algorithm_equivalence_test)
 {
   std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
   EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
 
-  std::ifstream is (pointset, std::ios::in);
+  // Get data from file.
+  std::ifstream is {pointset, std::ios::in};
   EXPECT_TRUE(!is.fail());
 
-  {
-    std::vector<concave::primitives::Point<double>> points;
-    std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull(points);
-
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
-
-    is.close();
-  }
-
-  // is empty
-  {
-    std::vector<concave::primitives::Point<double>> points;
-    auto convex_hull = concave::convexHull(points);
-    EXPECT_TRUE(convex_hull.empty());
-  }
-
-  // is 1, 2, 3 points
-  {
-    std::vector<concave::primitives::Point<double>> points;
-    points.emplace_back(0,0);
-    points.emplace_back(1,2);
-    points.emplace_back(1,0);
-
-    EXPECT_TRUE(concave::convexHull(std::vector<concave::primitives::Point<double>>{points.begin(), std::next(points.begin(), 1)}).empty());
-    EXPECT_TRUE(concave::convexHull(std::vector<concave::primitives::Point<double>>{points.begin(), std::next(points.begin(), 2)}).empty());
-    EXPECT_TRUE(!concave::convexHull(std::vector<concave::primitives::Point<double>>{points.begin(), std::next(points.begin(), 3)}).empty());
-  }
-}
-
-TEST_F(ConvexHullTests, convex_hull_graham_scan_cgal_point)
-{
-  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
-  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
-
-  std::ifstream is (pointset, std::ios::in);
-  EXPECT_TRUE(!is.fail());
-
-  std::vector<point_cgal> points;
-  std::copy(std::istream_iterator<point_cgal>{is}, {}, std::back_inserter(points));
-  auto convex_hull = concave::convexHull(points);
-
-  EXPECT_TRUE(!convex_hull.empty());
-  EXPECT_TRUE(convex_hull.size() == 4);
-
+  std::vector<concave::primitives::Point<double>> custom_points;
+  std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
   is.close();
+
+  {
+    auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(custom_points)};
+    auto quick_hull   {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(custom_points)};
+    auto graham_scan  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(custom_points)};
+
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+  }
+
+  // Save to OpenCV data point.
+  std::vector<point_opencv> opencv_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), opencv_points.begin(), [] (auto& point) {
+    return point_opencv(point.x, point.y);
+  });
+
+  {
+    auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(opencv_points)};
+    auto quick_hull   {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(opencv_points)};
+    auto graham_scan  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(opencv_points)};
+
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+  }
+
+  // Save to CGAL data point.
+  std::vector<point_cgal> cgal_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), cgal_points.begin(), [] (auto& point) {
+    return point_cgal(point.x, point.y);
+  });
+
+  {
+    auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(cgal_points)};
+    auto quick_hull   {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(cgal_points)};
+    auto graham_scan  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(cgal_points)};
+
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+  }
 }
 
-TEST_F(ConvexHullTests, convex_hull_graham_scan_opencv_point)
+TEST_F(ConvexHullTests, jarvis_march)
 {
+  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(std::vector<concave::primitives::Point<double>>{});
+  EXPECT_TRUE(convex_hull.empty());
+
   std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
   EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
 
-  std::ifstream is (pointset, std::ios::in);
+  // Get data from file.
+  std::ifstream is {pointset, std::ios::in};
   EXPECT_TRUE(!is.fail());
 
-  std::vector<point_opencv> points;
-  std::copy(std::istream_iterator<point_opencv>{is}, {}, std::back_inserter(points));
-  auto convex_hull = concave::convexHull(points);
-
-  EXPECT_TRUE(!convex_hull.empty());
-  EXPECT_TRUE(convex_hull.size() == 4);
-
+  std::vector<concave::primitives::Point<double>> custom_points;
+  std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
   is.close();
-}
 
-TEST_F(ConvexHullTests, convex_hull_quick_hull_custom_point)
-{
-  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
-  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
+  // Save to OpenCV data point.
+  std::vector<point_opencv> opencv_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), opencv_points.begin(), [] (auto& point) {
+    return point_opencv(point.x, point.y);
+  });
 
-  std::ifstream is (pointset, std::ios::in);
-  EXPECT_TRUE(!is.fail());
+  // Save to CGAL data point.
+  std::vector<point_cgal> cgal_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), cgal_points.begin(), [] (auto& point) {
+    return point_cgal(point.x, point.y);
+  });
 
-  {
-    std::vector<concave::primitives::Point<double>> points;
-    std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(points);
+  std::vector<concave::primitives::Point<double>> convex_hull_custom;
+  std::vector<point_opencv> convex_hull_opencv;
+  std::vector<point_cgal> convex_hull_cgal;
 
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
+  const std::size_t size_points {custom_points.size()};
+  for (std::size_t i {3}; i < size_points; ++i) {
+    convex_hull_custom = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)});
+    convex_hull_opencv = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
+    (std::vector<point_opencv>{opencv_points.begin(), std::next(opencv_points.begin(),i)});
+    convex_hull_cgal = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
+    (std::vector<point_cgal>{cgal_points.begin(), std::next(cgal_points.begin(),i)});
 
-    is.close();
+    EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
+    EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
   }
 }
 
-TEST_F(ConvexHullTests, convex_hull_quick_hull_cgal_point)
+TEST_F(ConvexHullTests, quick_hull)
 {
+  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(std::vector<concave::primitives::Point<double>>{});
+  EXPECT_TRUE(convex_hull.empty());
+
   std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
   EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
 
-  std::ifstream is (pointset, std::ios::in);
+  // Get data from file.
+  std::ifstream is {pointset, std::ios::in};
   EXPECT_TRUE(!is.fail());
 
-  {
-    std::vector<point_cgal> points;
-    std::copy(std::istream_iterator<point_cgal>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(points);
+  std::vector<concave::primitives::Point<double>> custom_points;
+  std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
+  is.close();
 
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
+  // Save to OpenCV data point.
+  std::vector<point_opencv> opencv_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), opencv_points.begin(), [] (auto& point) {
+    return point_opencv(point.x, point.y);
+  });
 
-    is.close();
+  // Save to CGAL data point.
+  std::vector<point_cgal> cgal_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), cgal_points.begin(), [] (auto& point) {
+    return point_cgal(point.x, point.y);
+  });
+
+  std::vector<concave::primitives::Point<double>> convex_hull_custom;
+  std::vector<point_opencv> convex_hull_opencv;
+  std::vector<point_cgal> convex_hull_cgal;
+
+  const std::size_t size_points {custom_points.size()};
+  for (std::size_t i {3}; i < size_points; ++i) {
+    convex_hull_custom = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)});
+    convex_hull_opencv = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
+    (std::vector<point_opencv>{opencv_points.begin(), std::next(opencv_points.begin(),i)});
+    convex_hull_cgal = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
+    (std::vector<point_cgal>{cgal_points.begin(), std::next(cgal_points.begin(),i)});
+
+    EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
+    EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
   }
 }
 
-TEST_F(ConvexHullTests, convex_hull_quick_hull_opencv_point)
+TEST_F(ConvexHullTests, graham_scan)
 {
+  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(std::vector<concave::primitives::Point<double>>{});
+  EXPECT_TRUE(convex_hull.empty());
+
   std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
   EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
 
-  std::ifstream is (pointset, std::ios::in);
+  // Get data from file.
+  std::ifstream is {pointset, std::ios::in};
   EXPECT_TRUE(!is.fail());
 
-  {
-    std::vector<point_opencv> points;
-    std::copy(std::istream_iterator<point_opencv>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(points);
+  std::vector<concave::primitives::Point<double>> custom_points;
+  std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
+  is.close();
 
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
+  // Save to OpenCV data point.
+  std::vector<point_opencv> opencv_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), opencv_points.begin(), [] (auto& point) {
+    return point_opencv(point.x, point.y);
+  });
 
-    is.close();
-  }
-}
+  // Save to CGAL data point.
+  std::vector<point_cgal> cgal_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), cgal_points.begin(), [] (auto& point) {
+    return point_cgal(point.x, point.y);
+  });
 
-TEST_F(ConvexHullTests, convex_hull_jarvis_march_custom_point)
-{
-  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
-  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
+  std::vector<concave::primitives::Point<double>> convex_hull_custom;
+  std::vector<point_opencv> convex_hull_opencv;
+  std::vector<point_cgal> convex_hull_cgal;
 
-  std::ifstream is (pointset, std::ios::in);
-  EXPECT_TRUE(!is.fail());
+  const std::size_t size_points {custom_points.size()};
+  for (std::size_t i {3}; i < size_points; ++i) {
+    convex_hull_custom = concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)});
+    convex_hull_opencv = concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
+    (std::vector<point_opencv>{opencv_points.begin(), std::next(opencv_points.begin(),i)});
+    convex_hull_cgal = concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
+    (std::vector<point_cgal>{cgal_points.begin(), std::next(cgal_points.begin(),i)});
 
-  {
-    std::vector<concave::primitives::Point<double>> points;
-    std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(points);
-
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
-
-    is.close();
-  }
-}
-
-TEST_F(ConvexHullTests, convex_hull_jarvis_march_cgal_point)
-{
-  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
-  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
-
-  std::ifstream is (pointset, std::ios::in);
-  EXPECT_TRUE(!is.fail());
-
-  {
-    std::vector<point_cgal> points;
-    std::copy(std::istream_iterator<point_cgal>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(points);
-
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
-
-    is.close();
-  }
-}
-
-TEST_F(ConvexHullTests, convex_hull_jarvis_march_opencv_point)
-{
-  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
-  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
-
-  std::ifstream is (pointset, std::ios::in);
-  EXPECT_TRUE(!is.fail());
-
-  {
-    std::vector<point_opencv> points;
-    std::copy(std::istream_iterator<point_opencv>{is}, {}, std::back_inserter(points));
-    auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(points);
-
-    EXPECT_TRUE(!convex_hull.empty());
-    EXPECT_TRUE(convex_hull.size() == 4);
-
-    is.close();
+    EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
+    EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
   }
 }

@@ -80,7 +80,7 @@ namespace concave {
       do {
         convex_hull.push_back(*current_point);
 
-        if (current_point != t_points.end() && current_point == --t_points.end()) {
+        if (current_point == t_points.end() || current_point == --t_points.end()) {
           middle_point = t_points.begin();
         } else {
           middle_point = std::next(current_point);

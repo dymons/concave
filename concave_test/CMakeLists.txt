@@ -4,7 +4,7 @@ project(concave_test VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined --coverage")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined --coverage -fconcepts")
 
 find_package(Boost 1.65.1 COMPONENTS filesystem REQUIRED)
 find_package(OpenCV REQUIRED)
