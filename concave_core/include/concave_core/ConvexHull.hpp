@@ -147,6 +147,7 @@ namespace concave {
       }
 
       // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
+      // TODO: I don't like how the algorithm works. I don't understand him very well. To be studied in detail to optimize this code.
 
       std::vector<T> points_copy {t_points.begin(), t_points.end()};
 

@@ -22,14 +22,16 @@
 using point_cgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
 using point_opencv = cv::Point_<double>;
 
-template <class InputIt, class OutputIt, class Predicate>
-  OutputIt transform_copy (InputIt first, InputIt last, OutputIt d_first, Predicate pred)
+template <typename T, typename R, typename P>
+  R transform_copy (T t_first_in, T t_last_in, R t_first_out, P t_pred)
   {
-    while (first != last) {
-      *d_first++ = pred(*first);
-      ++first;
+    while (t_first_in != t_last_in) {
+      *t_first_out = t_pred(*t_first_in);
+      ++t_first_out;
+      ++t_first_in;
     }
-    return d_first;
+
+    return t_first_out;
   }
 
 namespace CGAL {
@@ -155,6 +157,7 @@ TEST_F(ConvexHullTests, jarvis_march)
 
     EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
     EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
+    // TODO: Add data equivalence checks from all algorithms.
   }
 }
 
