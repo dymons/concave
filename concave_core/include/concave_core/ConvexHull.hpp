@@ -13,6 +13,7 @@ namespace concave::extension {
   template <typename T, typename U>
     void quickHull (const std::vector<T>& t_points, const typename std::vector<T>::const_iterator& t_leftmost, const typename std::vector<T>::const_iterator& t_rightmost, U&& t_convex_hull)
     {
+      // For a part, find the point is_point_far with maximum distance from the line (t_leftmost, t_rightmost).
       auto is_point_far {t_points.end()};
       double distance_upper {0.0}, current_distance {0.0}; // TODO: Replace with automatic type detection use type_traits.
       for (auto it {t_points.begin()}; it != t_points.end(); ++it) {
@@ -25,12 +26,16 @@ namespace concave::extension {
         }
       }
 
+      // No point left with the line. Add the end points of this point to the convex hull.
       if (is_point_far == t_points.end()) {
         *t_convex_hull = *t_leftmost;
         ++t_convex_hull;
         return;
       }
 
+      // The above step divides the problem into two sub-problems (solved recursively).
+      // Now the line joining the points is_point_far and t_leftmost and the line joining
+      // the points is_point_far and t_rightmost are new lines.
       quickHull(t_points, t_leftmost, is_point_far, t_convex_hull);
       quickHull(t_points, is_point_far, t_rightmost, t_convex_hull);
     }
@@ -70,29 +75,33 @@ namespace concave {
         return convex_hull;
       }
 
+      // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
+
       // Find the leftmost point in the point set given to us.
-      auto leftmost {std::min_element(t_points.begin(), t_points.end(), [] (auto& lhs, auto& rhs) {
+      const auto leftmost {std::min_element(t_points.begin(), t_points.end(), [] (auto& lhs, auto& rhs) {
         return utility::less<const T&>(lhs, rhs);
       })};
 
-      auto current_point {leftmost}, middle_point {leftmost};
+      auto current_point {leftmost}, second_point {leftmost};
 
+      // Do following while we don’t come back to the first (or leftmost) point.
       do {
         convex_hull.push_back(*current_point);
 
         if (current_point == t_points.end() || current_point == --t_points.end()) {
-          middle_point = t_points.begin();
+          second_point = t_points.begin();
         } else {
-          middle_point = std::next(current_point);
+          second_point = std::next(current_point);
         }
 
-        for (auto it = t_points.begin(); it != t_points.end(); ++it) {
-          if (utility::orientetion(*current_point, *it, *middle_point) == utility::Orientation::COUNTERCLOCKWISE) {
-            middle_point = it;
+        // Find last triplet (current_point, middle_point, second_point) is counterclockwise.
+        for (auto middle_point = t_points.begin(); middle_point != t_points.end(); ++middle_point) {
+          if (utility::orientetion(*current_point, *middle_point, *second_point) == utility::Orientation::COUNTERCLOCKWISE) {
+            second_point = middle_point;
           }
         }
 
-        current_point = middle_point;
+        current_point = second_point;
       } while (current_point != leftmost);
 
       convex_hull.shrink_to_fit();
@@ -109,6 +118,9 @@ namespace concave {
         return convex_hull;
       }
 
+      // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
+
+      // Find the point with minimum x-coordinate (leftmost), and similarly the point with maximum x-coordinate (rightmost).
       const auto& [leftmost, rightmost] {std::minmax_element(t_points.begin(), t_points.end(), [] (auto& lhs, auto& rhs) {
         return utility::less<const T&>(lhs, rhs);
       })};
@@ -117,8 +129,9 @@ namespace concave {
         return convex_hull;
       }
 
-      extension::quickHull(t_points, leftmost, rightmost, std::back_inserter(convex_hull));
-      extension::quickHull(t_points, rightmost, leftmost, std::back_inserter(convex_hull));
+      // Make a line joining these two points. This line will divide the whole set into two parts.
+      extension::quickHull(t_points, leftmost, rightmost, std::back_inserter(convex_hull)); // For left side
+      extension::quickHull(t_points, rightmost, leftmost, std::back_inserter(convex_hull)); // For right side
 
       convex_hull.shrink_to_fit();
       return convex_hull;
@@ -132,6 +145,8 @@ namespace concave {
       if (t_points.size() < 3) {
         return convex_hull;
       }
+
+      // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
 
       std::vector<T> points_copy {t_points.begin(), t_points.end()};
 
@@ -149,16 +164,16 @@ namespace concave {
       // Sort their points in the polar angle in the counterclockwise direction.
       const auto& first_point {points_copy.begin()};
       std::sort(std::next(points_copy.begin()), points_copy.end(), [&] (auto& lhs, auto& rhs) {
-        auto o {utility::orientetion(*first_point, lhs, rhs)};
+        auto orientetion {utility::orientetion(*first_point, lhs, rhs)};
 
         // If the polar angle of the two points is the same, then first put the nearest point.
-        if (o == utility::Orientation::COLINEAR) {
+        if (orientetion == utility::Orientation::COLINEAR) {
           if (utility::distance(*first_point, rhs) > utility::distance(*first_point, lhs)) {
             return true;
           }
         }
 
-        return o == utility::Orientation::COUNTERCLOCKWISE;
+        return orientetion == utility::Orientation::COUNTERCLOCKWISE;
       });
 
       auto second_point {std::next(first_point)};
