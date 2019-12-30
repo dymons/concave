@@ -94,15 +94,18 @@ namespace concave::utility {
     }
 
   template <typename T>
-    constexpr decltype(auto) less (T&& t_f, T&& t_s) noexcept
-    {
-      using TypePoint = std::remove_reference_t<T>;
-      if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-        return (t_f.y() < t_s.y()) || ((std::abs(t_f.y() - t_s.y()) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x()), decltype(t_s.x())>>::epsilon()) && t_f.x() < t_s.x());
-      } else {
-        return (t_f.y < t_s.y) || ((std::abs(t_f.y - t_s.y) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x), decltype(t_s.x)>>::epsilon()) && t_f.x < t_s.x);
+    struct less {
+      constexpr decltype(auto) operator() (const T& t_f, const T& t_s) noexcept
+      {
+        using TypePoint = std::remove_reference_t<T>;
+        if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
+          return (t_f.y() < t_s.y()) || ((std::abs(t_f.y() - t_s.y()) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x()), decltype(t_s.x())>>::epsilon()) && t_f.x() < t_s.x());
+        } else {
+          return (t_f.y < t_s.y) || ((std::abs(t_f.y - t_s.y) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x), decltype(t_s.x)>>::epsilon()) && t_f.x < t_s.x);
+        }
       }
-    }
+    };
+
 
   template <typename T>
     constexpr decltype(auto) side (T&& t_f, T&& t_s, T&& t_t) noexcept

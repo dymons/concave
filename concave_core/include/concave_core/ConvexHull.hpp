@@ -78,9 +78,7 @@ namespace concave {
       // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
 
       // Find the leftmost point in the point set given to us.
-      const auto leftmost {std::min_element(t_points.begin(), t_points.end(), [] (auto& lhs, auto& rhs) {
-        return utility::less<const T&>(lhs, rhs);
-      })};
+      const auto leftmost {std::min_element(t_points.begin(), t_points.end(), utility::less<T>{})};
 
       auto current_point {leftmost}, second_point {leftmost};
 
@@ -121,9 +119,7 @@ namespace concave {
       // TODO: Checking all points of the set are different and that it contains at least three non-collinear points.
 
       // Find the point with minimum x-coordinate (leftmost), and similarly the point with maximum x-coordinate (rightmost).
-      const auto& [leftmost, rightmost] {std::minmax_element(t_points.begin(), t_points.end(), [] (auto& lhs, auto& rhs) {
-        return utility::less<const T&>(lhs, rhs);
-      })};
+      const auto& [leftmost, rightmost] {std::minmax_element(t_points.begin(), t_points.end(), utility::less<T>{})};
 
       if (leftmost == t_points.end() || rightmost == t_points.end()) {
         return convex_hull;
@@ -152,9 +148,7 @@ namespace concave {
       std::vector<T> points_copy {t_points.begin(), t_points.end()};
 
       // Find the leftmost point in the point set given to us.
-      auto leftmost {std::min_element(points_copy.begin(), points_copy.end(), [] (auto& lhs, auto& rhs) {
-        return utility::less<T&>(lhs, rhs);
-      })};
+      auto leftmost {std::min_element(points_copy.begin(), points_copy.end(), utility::less<T>{})};
 
       if (leftmost == points_copy.end()) {
         return convex_hull;
