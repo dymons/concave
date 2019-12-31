@@ -16,7 +16,6 @@ add_subdirectory(google-test)
 
 add_executable(concave_convexhull_tests concave_convexhull_tests.cpp)
 add_to_cached_list(CGAL_EXECUTABLE_TARGETS concave_convexhull_tests)
-
 target_link_libraries(concave_convexhull_tests
   concave::concave_core
   GTest::GTest
@@ -26,7 +25,6 @@ target_link_libraries(concave_convexhull_tests
   ${CGAL_LIBRARIES}
   ${CGAL_3RD_PARTY_LIBRARIES}
 )
-
 add_test(NAME concave_convexhull_tests COMMAND concave_convexhull_tests)
 
 add_executable(concave_utility_tests concave_utility_tests.cpp)
