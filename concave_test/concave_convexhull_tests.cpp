@@ -69,16 +69,35 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
   is.close();
 
   {
-    auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(custom_points)};
-    auto quick_hull   {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(custom_points)};
-    auto graham_scan  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(custom_points)};
+    auto jarvis_march        {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(custom_points)};
+    auto quick_hull          {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(custom_points)};
+    auto graham_scan         {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(custom_points)};
     auto divide_and_conquer  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(custom_points)};
 
     EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
-    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
+  }
+
+  {
+    for (std::size_t i {3}; i < custom_points.size(); ++i) {
+      auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
+      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+      auto quick_hull {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
+       (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+      auto graham_scan {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
+       (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+      auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
+      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+
+      EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
+      EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
+      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
+      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
+    }
   }
 
   // Save to OpenCV data point.
@@ -257,22 +276,47 @@ TEST_F(ConvexHullTests, graham_scan)
 
 TEST_F(ConvexHullTests, divide_and_conquer)
 {
-  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(std::vector<concave::primitives::Point<double>>{
-    concave::primitives::Point<double>{2,3},
-    concave::primitives::Point<double>{2,6},
-    concave::primitives::Point<double>{7,4},
-    concave::primitives::Point<double>{5,7},
-    concave::primitives::Point<double>{5,2},
-    concave::primitives::Point<double>{12,6},
-    concave::primitives::Point<double>{11,4},
-    concave::primitives::Point<double>{12,2},
-    concave::primitives::Point<double>{14,-2},
-    concave::primitives::Point<double>{16,4},
-    concave::primitives::Point<double>{14,7},
-    concave::primitives::Point<double>{11,10}
+  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(std::vector<concave::primitives::Point<double>>{});
+  EXPECT_TRUE(convex_hull.empty());
+
+  std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt"};
+  EXPECT_TRUE(boost::filesystem::exists(boost::filesystem::path(pointset)));
+
+  // Get data from file.
+  std::ifstream is {pointset, std::ios::in};
+  EXPECT_TRUE(!is.fail());
+
+  std::vector<concave::primitives::Point<double>> custom_points;
+  std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
+  is.close();
+
+  // Save to OpenCV data point.
+  std::vector<point_opencv> opencv_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), opencv_points.begin(), [] (auto& point) {
+    return point_opencv(point.x, point.y);
   });
 
-  for (auto& p : convex_hull) {
-    std::cout << p.x << " " << p.y << std::endl;
+  // Save to CGAL data point.
+  std::vector<point_cgal> cgal_points (custom_points.size());
+  transform_copy(custom_points.begin(), custom_points.end(), cgal_points.begin(), [] (auto& point) {
+    return point_cgal(point.x, point.y);
+  });
+
+  std::vector<concave::primitives::Point<double>> convex_hull_custom;
+  std::vector<point_opencv> convex_hull_opencv;
+  std::vector<point_cgal> convex_hull_cgal;
+
+  const std::size_t size_points {custom_points.size()};
+  for (std::size_t i {3}; i < size_points; ++i) {
+    std::cout << i << std::endl;
+    convex_hull_custom = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
+            (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)});
+    convex_hull_opencv = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
+            (std::vector<point_opencv>{opencv_points.begin(), std::next(opencv_points.begin(),i)});
+    convex_hull_cgal = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
+            (std::vector<point_cgal>{cgal_points.begin(), std::next(cgal_points.begin(),i)});
+
+    EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
+    EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
   }
 }
