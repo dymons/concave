@@ -5,6 +5,7 @@
 
 #include "concave_core/utility/Utility.hpp"
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <type_traits>
@@ -38,6 +39,168 @@ namespace concave::extension {
       // the points is_point_far and t_rightmost are new lines.
       quickHull(t_points, t_leftmost, point_far, t_convex_hull);
       quickHull(t_points, point_far, t_rightmost, t_convex_hull);
+    }
+
+  template <typename T>
+    std::vector<T> mergeDivideAndConquer (const std::vector<T>& t_lefthull, const std::vector<T>& t_righthull)
+    {
+      std::vector<T> merge_convex_hull;
+
+      if (t_lefthull.empty() || t_righthull.empty()) {
+        return merge_convex_hull; // TODO: It isn't correct.
+      }
+
+      // Search for extreme points.
+      const auto rightmost {std::max_element(t_lefthull.begin(),  t_lefthull.end(),  utility::less_then_x<T>{})}; // For left ConvexHull
+      const auto leftmost  {std::min_element(t_righthull.begin(), t_righthull.end(), utility::less_then_x<T>{})}; // For right ConvexHull
+
+      // For debug.
+      auto print      ([]  (auto& s, auto& p)    {std::cout << s << " x: " << p->x << ", y: " << p->y << std::endl;});
+      auto print_hull ([=] (auto& s, auto& hull) {for (auto p = hull.begin(); p != hull.end(); ++p) {print(s, p);}});
+
+      print_hull("t_lefthull", t_lefthull);
+      print_hull("t_righthull", t_righthull);
+
+      print("rightmost", rightmost);
+      print("leftmost", leftmost);
+
+      auto upper_rightmost {rightmost}, upper_leftmost {leftmost};
+
+      std::cout << "start" << std::endl;
+      {
+        bool is_find_tangents { true };
+        while (is_find_tangents) {
+          is_find_tangents = false;
+
+          if (upper_rightmost == t_lefthull.end()) {
+            upper_rightmost = t_lefthull.begin();
+          }
+
+          while (utility::orientetion(*upper_leftmost, *upper_rightmost, *std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size()))
+              != utility::Orientation::COUNTERCLOCKWISE) {
+            upper_rightmost = std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size());
+          }
+
+          if (upper_leftmost == t_righthull.end()) {
+            upper_leftmost = t_righthull.begin();
+          }
+
+          // TODO: t_righthull.size() +
+          while (utility::orientetion(*upper_rightmost, *upper_leftmost, *std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size()))
+              != utility::Orientation::CLOCKWISE) {
+            upper_leftmost = std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size());
+            is_find_tangents = true;
+          }
+        }
+      }
+      print("upper_rightmost", upper_rightmost);
+      print("upper_leftmost", upper_leftmost);
+      std::cout << "finish" << std::endl;
+
+      auto lower_rightmost {rightmost}, lower_leftmost {leftmost};
+
+      {
+        bool is_find_tangents { true };
+        while (is_find_tangents) {
+          is_find_tangents = false;
+
+          if (lower_leftmost == t_righthull.end()) {
+            lower_leftmost = t_righthull.begin();
+          }
+
+          //std::cout << "type: " << int(utility::orientetion(*lower_rightmost, *lower_leftmost, *std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) - 1) % t_righthull.size()))) << std::endl;
+
+          while (utility::orientetion(*lower_rightmost, *lower_leftmost, *std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size()))
+//                 != utility::Orientation::COUNTERCLOCKWISE) {
+                 == utility::Orientation::CLOCKWISE) {
+            std::cout << "current: " << int(utility::orientetion(*lower_rightmost, *lower_leftmost, *std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size())));
+            std::cout << " need  " << int(utility::Orientation::COUNTERCLOCKWISE) << std::endl;
+            std::cout << "distance: " << std::distance(t_righthull.begin(), lower_leftmost) << " | size = " << t_righthull.size() << std::endl;
+            lower_leftmost = std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size());
+            print("lower_leftmost", lower_leftmost);
+
+          }
+
+//          print("lower_leftmost", lower_leftmost);
+
+          if (lower_rightmost == t_lefthull.end()) {
+            lower_rightmost = t_lefthull.begin();
+          }
+
+          while (utility::orientetion(*lower_leftmost, *lower_rightmost, *std::next(t_lefthull.begin(), (t_lefthull.size() + std::distance(t_lefthull.begin(), lower_rightmost) - 1) % t_lefthull.size()))
+              != utility::Orientation::CLOCKWISE) {
+            lower_rightmost = std::next(t_lefthull.begin(), (t_lefthull.size() + std::distance(t_lefthull.begin(), lower_rightmost) - 1) % t_lefthull.size());
+            is_find_tangents = true;
+            print("lower_rightmost", lower_rightmost);
+          }
+        }
+      }
+
+      print("lower_rightmost", lower_rightmost);
+      print("lower_leftmost", lower_leftmost);
+
+      std::cout << "start merge left hull" << std::endl;
+
+//      std::cout << int(lower_rightmost == lower_rightmost) << std::endl;
+
+//      do {
+//        if (upper_rightmost == t_lefthull.end()) {
+//          upper_rightmost = t_lefthull.begin();
+//        }
+//
+//        std::cout << int(upper_rightmost == lower_rightmost) << std::endl;
+//
+//        print("upper_rightmost", upper_rightmost);
+//
+//        merge_convex_hull.push_back(*upper_rightmost);
+//        ++upper_rightmost;
+//      } while (upper_rightmost != lower_rightmost);
+
+      while (true) {
+        if (upper_rightmost == t_lefthull.end()) {
+          upper_rightmost = t_lefthull.begin();
+        }
+
+        merge_convex_hull.push_back(*upper_rightmost);
+
+        if (upper_rightmost == lower_rightmost) {
+          break;
+        }
+
+        ++upper_rightmost;
+      }
+
+      std::cout << "finish merge left hull" << std::endl;
+      std::cout << "start merge right hull" << std::endl;
+
+      while (true) {
+        if (lower_leftmost == t_righthull.end()) {
+          lower_leftmost = t_righthull.begin();
+        }
+
+        merge_convex_hull.push_back(*lower_leftmost);
+
+        if (lower_leftmost == upper_leftmost) {
+          break;
+        }
+
+        ++lower_leftmost;
+      }
+//
+//      do {
+//        if (lower_leftmost == t_righthull.end()) {
+//          lower_leftmost = t_righthull.begin();
+//        }
+//
+//        print("lower_leftmost", lower_leftmost);
+//
+//        merge_convex_hull.push_back(*lower_leftmost);
+//        ++lower_leftmost;
+//      } while (lower_leftmost != upper_leftmost);
+
+      std::cout << "finish merge right hull" << std::endl;
+
+      return merge_convex_hull;
     }
 }  // namespace concave::extension
 
@@ -102,6 +265,29 @@ namespace concave {
 
       convex_hull.shrink_to_fit();
       return convex_hull;
+    }
+
+  template <typename U, typename T>
+    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<U, AlgorithmHull<Pattern::DivideAndConquer>>::value>* = 0)
+    {
+      if (t_points.size() < 7) {
+        return convexHull<AlgorithmHull<Pattern::JarvisMarch>>(t_points); // TODO: Implement Brute force algorithm to find convex hull. NRVO
+      }
+
+      std::cout << "Input size: " << t_points.size() << std::endl;
+
+      std::vector<T> points_copy (t_points);
+      std::sort(points_copy.begin(), points_copy.end(), utility::less_then_x<T>{});
+
+      std::cout << "points in t_points: \n";
+      for (auto& p : points_copy) {
+        std::cout << "x: " << p.x << ", y: " << p.y << std::endl;
+      }
+
+      const auto middle_point {std::next(points_copy.begin(), static_cast<std::size_t>((std::distance(points_copy.begin(), points_copy.end()) / 2)))};
+      std::vector<T> lefthull  {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>(std::vector<T>{points_copy.begin(), middle_point})};
+      std::vector<T> righthull {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>(std::vector<T>{middle_point, points_copy.end()})};
+      return extension::mergeDivideAndConquer(lefthull, righthull);
     }
 
   template <typename U, typename T>

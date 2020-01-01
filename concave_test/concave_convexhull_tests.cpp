@@ -72,11 +72,13 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
     auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(custom_points)};
     auto quick_hull   {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(custom_points)};
     auto graham_scan  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(custom_points)};
+    auto divide_and_conquer  {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(custom_points)};
 
-    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
     EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
   }
 
   // Save to OpenCV data point.
@@ -250,5 +252,27 @@ TEST_F(ConvexHullTests, graham_scan)
 
     EXPECT_TRUE(!convex_hull_custom.empty() && !convex_hull_opencv.empty() && !convex_hull_cgal.empty());
     EXPECT_TRUE((convex_hull_custom.size() == convex_hull_opencv.size()) && (convex_hull_custom.size() == convex_hull_cgal.size()));
+  }
+}
+
+TEST_F(ConvexHullTests, divide_and_conquer)
+{
+  auto convex_hull = concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(std::vector<concave::primitives::Point<double>>{
+    concave::primitives::Point<double>{2,3},
+    concave::primitives::Point<double>{2,6},
+    concave::primitives::Point<double>{7,4},
+    concave::primitives::Point<double>{5,7},
+    concave::primitives::Point<double>{5,2},
+    concave::primitives::Point<double>{12,6},
+    concave::primitives::Point<double>{11,4},
+    concave::primitives::Point<double>{12,2},
+    concave::primitives::Point<double>{14,-2},
+    concave::primitives::Point<double>{16,4},
+    concave::primitives::Point<double>{14,7},
+    concave::primitives::Point<double>{11,10}
+  });
+
+  for (auto& p : convex_hull) {
+    std::cout << p.x << " " << p.y << std::endl;
   }
 }
