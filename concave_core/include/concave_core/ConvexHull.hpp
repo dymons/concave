@@ -5,7 +5,6 @@
 
 #include "concave_core/utility/Utility.hpp"
 
-#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <type_traits>
@@ -42,9 +41,10 @@ namespace concave::extension {
     }
 
   template <typename T>
-    std::vector<T> mergeDivideAndConquer (const std::vector<T>& t_lefthull, const std::vector<T>& t_righthull)
+    std::vector<T> mergeDivideAndConquer (const std::vector<T>&& t_lefthull, const std::vector<T>&& t_righthull)
     {
       std::vector<T> merge_convex_hull;
+      merge_convex_hull.reserve(t_lefthull.size() + t_righthull.size());
 
       if (t_lefthull.empty() || t_righthull.empty()) {
         return merge_convex_hull; // TODO: It isn't correct.
@@ -56,6 +56,7 @@ namespace concave::extension {
 
       auto upper_rightmost {rightmost}, upper_leftmost {leftmost};
 
+      // TODO: Add function for find tangents.
       {
         bool is_find_tangents { true };
         while (is_find_tangents) {
@@ -66,7 +67,7 @@ namespace concave::extension {
           }
 
           while (utility::orientetion(*upper_leftmost, *upper_rightmost, *std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size()))
-              != utility::Orientation::COUNTERCLOCKWISE) {
+              == utility::Orientation::CLOCKWISE) {
             upper_rightmost = std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size());
           }
 
@@ -74,7 +75,6 @@ namespace concave::extension {
             upper_leftmost = t_righthull.begin();
           }
 
-          // TODO: t_righthull.size() +
           while (utility::orientetion(*upper_rightmost, *upper_leftmost, *std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size()))
               != utility::Orientation::CLOCKWISE) {
             upper_leftmost = std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size());
@@ -95,8 +95,7 @@ namespace concave::extension {
           }
 
           while (utility::orientetion(*lower_rightmost, *lower_leftmost, *std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size()))
-//                 != utility::Orientation::COUNTERCLOCKWISE) {
-                 == utility::Orientation::CLOCKWISE) {
+              == utility::Orientation::CLOCKWISE) {
             lower_leftmost = std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size());
           }
 
@@ -112,32 +111,18 @@ namespace concave::extension {
         }
       }
 
-      while (true) {
-        if (upper_rightmost == t_lefthull.end()) {
-          upper_rightmost = t_lefthull.begin();
-        }
-
-        merge_convex_hull.push_back(*upper_rightmost);
-
-        if (upper_rightmost == lower_rightmost) {
-          break;
-        }
-
-        ++upper_rightmost;
+      if (std::distance(t_lefthull.begin(), upper_rightmost) > std::distance(t_lefthull.begin(), lower_rightmost)) {
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(upper_rightmost), std::make_move_iterator(t_lefthull.end()));
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(t_lefthull.begin()), std::make_move_iterator(std::next(lower_rightmost)));
+      } else {
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(upper_rightmost), std::make_move_iterator(std::next(lower_rightmost)));
       }
 
-      while (true) {
-        if (lower_leftmost == t_righthull.end()) {
-          lower_leftmost = t_righthull.begin();
-        }
-
-        merge_convex_hull.push_back(*lower_leftmost);
-
-        if (lower_leftmost == upper_leftmost) {
-          break;
-        }
-
-        ++lower_leftmost;
+      if (std::distance(t_righthull.begin(), lower_leftmost) > std::distance(t_righthull.begin(), upper_leftmost)) {
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(lower_leftmost), std::make_move_iterator(t_righthull.end()));
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(t_righthull.begin()), std::make_move_iterator(std::next(upper_leftmost)));
+      } else {
+        merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(lower_leftmost), std::make_move_iterator(std::next(upper_leftmost)));
       }
 
       return merge_convex_hull;
@@ -179,7 +164,7 @@ namespace concave {
       }
 
       // Find the leftmost point in the point set given to us.
-      const auto leftmost {std::min_element(t_points.begin(), t_points.end(), utility::less<T>{})};
+      const auto leftmost {std::min_element(t_points.begin(), t_points.end(), utility::less_then_y<T>{})};
 
       auto current_point {leftmost}, second_point {leftmost};
 
@@ -210,18 +195,23 @@ namespace concave {
   template <typename U, typename T>
     std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<U, AlgorithmHull<Pattern::DivideAndConquer>>::value>* = 0)
     {
-      if (t_points.size() < 7) {
-        return convexHull<AlgorithmHull<Pattern::JarvisMarch>>(t_points); // TODO: Implement Brute force algorithm to find convex hull. NRVO
+      std::vector<T> convex_hull;
+
+      if (t_points.size() < 6) {
+        convex_hull = convexHull<AlgorithmHull<Pattern::JarvisMarch>>(t_points); // TODO: Implement Brute force algorithm to find convex hull.
+      } else {
+        std::vector<T> points_copy (t_points);
+        std::sort(points_copy.begin(), points_copy.end(), utility::less_then_x<T>{});
+
+        const auto middle_point  {std::next(points_copy.begin(), static_cast<std::size_t>((std::distance(points_copy.begin(), points_copy.end()) / 2)))};
+        std::vector<T> lefthull  {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>
+        (std::vector<T>{std::make_move_iterator(points_copy.begin()), std::make_move_iterator(middle_point)})}; // ?
+        std::vector<T> righthull {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>
+        (std::vector<T>{std::make_move_iterator(middle_point), std::make_move_iterator(points_copy.end())})};
+        convex_hull = extension::mergeDivideAndConquer(std::move(lefthull), std::move(righthull));
       }
 
-      std::vector<T> points_copy (t_points);
-      std::sort(points_copy.begin(), points_copy.end(), utility::less_then_x<T>{});
-
-      // TODO: partition
-      const auto middle_point {std::next(points_copy.begin(), static_cast<std::size_t>((std::distance(points_copy.begin(), points_copy.end()) / 2)))};
-      std::vector<T> lefthull  {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>(std::vector<T>{points_copy.begin(), middle_point})};
-      std::vector<T> righthull {convexHull<AlgorithmHull<Pattern::DivideAndConquer>>(std::vector<T>{middle_point, points_copy.end()})};
-      return extension::mergeDivideAndConquer(lefthull, righthull);
+      return convex_hull;
     }
 
   template <typename U, typename T>
@@ -235,7 +225,7 @@ namespace concave {
       }
 
       // Find the point with minimum x-coordinate (leftmost), and similarly the point with maximum x-coordinate (rightmost).
-      const auto [leftmost, rightmost] {std::minmax_element(t_points.begin(), t_points.end(), utility::less<T>{})};
+      const auto [leftmost, rightmost] {std::minmax_element(t_points.begin(), t_points.end(), utility::less_then_y<T>{})};
 
       // Make a line joining these two points. This line will divide the whole set into two parts.
       extension::quickHull(t_points, leftmost, rightmost, std::back_inserter(convex_hull)); // For left side
@@ -257,7 +247,7 @@ namespace concave {
       std::vector<T> points_copy (t_points);
 
       // Find the leftmost point in the point set given to us and swap with begin point.
-      auto leftmost {std::min_element(points_copy.begin(), points_copy.end(), utility::less<T>{})};
+      auto leftmost {std::min_element(points_copy.begin(), points_copy.end(), utility::less_then_y<T>{})};
       std::iter_swap(points_copy.begin(), leftmost);
 
       // Sort their points in the polar angle in the counterclockwise direction.
@@ -267,10 +257,6 @@ namespace concave {
 
       convex_hull.reserve(points_copy.size());
       convex_hull.insert(convex_hull.end(), points_copy.begin(), std::next(points_copy.begin(), 3));
-
-      if (points_copy.size() < 4) {
-        return convex_hull;
-      }
 
       for (auto current_point_it {std::next(points_copy.begin(), 3)}; current_point_it != points_copy.end(); ++current_point_it) {
         while (utility::orientetion(*std::next(convex_hull.rbegin()), convex_hull.back(), *current_point_it) != utility::Orientation::COUNTERCLOCKWISE) {
