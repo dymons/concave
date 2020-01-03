@@ -54,63 +54,11 @@ namespace concave::extension {
       const auto rightmost {std::max_element(t_lefthull.begin(),  t_lefthull.end(),  utility::less_then_x<T>{})}; // For left ConvexHull
       const auto leftmost  {std::min_element(t_righthull.begin(), t_righthull.end(), utility::less_then_x<T>{})}; // For right ConvexHull
 
-      auto upper_rightmost {rightmost}, upper_leftmost {leftmost};
+      // Find upper and lower tangent.
+      const auto [upper_rightmost, upper_leftmost] = utility::tangent(rightmost, t_lefthull, leftmost, t_righthull);
+      const auto [lower_leftmost, lower_rightmost] = utility::tangent(leftmost, t_righthull, rightmost, t_lefthull);
 
-      // TODO: Add function for find tangents.
-      {
-        bool is_find_tangents { true };
-        while (is_find_tangents) {
-          is_find_tangents = false;
-
-          if (upper_rightmost == t_lefthull.end()) {
-            upper_rightmost = t_lefthull.begin();
-          }
-
-          while (utility::orientetion(*upper_leftmost, *upper_rightmost, *std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size()))
-              == utility::Orientation::CLOCKWISE) {
-            upper_rightmost = std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), upper_rightmost) + 1) % t_lefthull.size());
-          }
-
-          if (upper_leftmost == t_righthull.end()) {
-            upper_leftmost = t_righthull.begin();
-          }
-
-          while (utility::orientetion(*upper_rightmost, *upper_leftmost, *std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size()))
-              != utility::Orientation::CLOCKWISE) {
-            upper_leftmost = std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), upper_leftmost) - 1) % t_righthull.size());
-            is_find_tangents = true;
-          }
-        }
-      }
-
-      auto lower_rightmost {rightmost}, lower_leftmost {leftmost};
-
-      {
-        bool is_find_tangents { true };
-        while (is_find_tangents) {
-          is_find_tangents = false;
-
-          if (lower_leftmost == t_righthull.end()) {
-            lower_leftmost = t_righthull.begin();
-          }
-
-          while (utility::orientetion(*lower_rightmost, *lower_leftmost, *std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size()))
-              == utility::Orientation::CLOCKWISE) {
-            lower_leftmost = std::next(t_righthull.begin(), (std::distance(t_righthull.begin(), lower_leftmost) + 1) % t_righthull.size());
-          }
-
-          if (lower_rightmost == t_lefthull.end()) {
-            lower_rightmost = t_lefthull.begin();
-          }
-
-          while (utility::orientetion(*lower_leftmost, *lower_rightmost, *std::next(t_lefthull.begin(), (t_lefthull.size() + std::distance(t_lefthull.begin(), lower_rightmost) - 1) % t_lefthull.size()))
-              != utility::Orientation::CLOCKWISE) {
-            lower_rightmost = std::next(t_lefthull.begin(), (t_lefthull.size() + std::distance(t_lefthull.begin(), lower_rightmost) - 1) % t_lefthull.size());
-            is_find_tangents = true;
-          }
-        }
-      }
-
+      // Add points from left hull, from 'upper_rightmost' to 'lower_rightmost'.
       if (std::distance(t_lefthull.begin(), upper_rightmost) > std::distance(t_lefthull.begin(), lower_rightmost)) {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(upper_rightmost), std::make_move_iterator(t_lefthull.end()));
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(t_lefthull.begin()), std::make_move_iterator(std::next(lower_rightmost)));
@@ -118,6 +66,7 @@ namespace concave::extension {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(upper_rightmost), std::make_move_iterator(std::next(lower_rightmost)));
       }
 
+      // Add pints from right hull, from 'lower_leftmost' to 'upper_leftmost'.
       if (std::distance(t_righthull.begin(), lower_leftmost) > std::distance(t_righthull.begin(), upper_leftmost)) {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(lower_leftmost), std::make_move_iterator(t_righthull.end()));
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(t_righthull.begin()), std::make_move_iterator(std::next(upper_leftmost)));
@@ -125,6 +74,7 @@ namespace concave::extension {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(lower_leftmost), std::make_move_iterator(std::next(upper_leftmost)));
       }
 
+      merge_convex_hull.shrink_to_fit();
       return merge_convex_hull;
     }
 }  // namespace concave::extension
