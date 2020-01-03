@@ -68,24 +68,21 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
   std::copy(std::istream_iterator<concave::primitives::Point<double>>{is}, {}, std::back_inserter(custom_points));
   is.close();
 
-  {
-    for (std::size_t i {3}; i < custom_points.size(); ++i) {
-      auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
-      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
-      auto quick_hull {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
-      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
-      auto graham_scan {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
-      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
-      auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
-      (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+  for (std::size_t i {3}; i < custom_points.size(); ++i) {
+    auto jarvis_march {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+    auto quick_hull {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+    auto graham_scan {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
+    auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
+    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
 
-
-      EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
-      EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
-      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
-      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
-      EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
-    }
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
+    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
   }
 
   // Save to OpenCV data point.

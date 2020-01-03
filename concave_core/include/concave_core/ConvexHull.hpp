@@ -66,7 +66,7 @@ namespace concave::extension {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(upper_rightmost), std::make_move_iterator(std::next(lower_rightmost)));
       }
 
-      // Add pints from right hull, from 'lower_leftmost' to 'upper_leftmost'.
+      // Add points from right hull, from 'lower_leftmost' to 'upper_leftmost'.
       if (std::distance(t_righthull.begin(), lower_leftmost) > std::distance(t_righthull.begin(), upper_leftmost)) {
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(lower_leftmost), std::make_move_iterator(t_righthull.end()));
         merge_convex_hull.insert(merge_convex_hull.end(), std::make_move_iterator(t_righthull.begin()), std::make_move_iterator(std::next(upper_leftmost)));
@@ -147,7 +147,7 @@ namespace concave {
     {
       std::vector<T> convex_hull;
 
-      if (t_points.size() < 6) {
+      if (t_points.size() < 10) {
         convex_hull = convexHull<AlgorithmHull<Pattern::JarvisMarch>>(t_points); // TODO: Implement Brute force algorithm to find convex hull.
       } else {
         std::vector<T> points_copy (t_points);
