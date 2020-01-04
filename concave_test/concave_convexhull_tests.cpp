@@ -75,14 +75,11 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
     (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
     auto graham_scan {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>
     (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
-    auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>
-    (std::vector<concave::primitives::Point<double>>{custom_points.begin(), std::next(custom_points.begin(),i)})};
 
-    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
-    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
-    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
   }
 
   // Save to OpenCV data point.
@@ -95,13 +92,11 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
     auto jarvis_march       {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(opencv_points)};
     auto quick_hull         {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(opencv_points)};
     auto graham_scan        {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(opencv_points)};
-    auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(opencv_points)};
 
-    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
-    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
-    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
   }
 
   // Save to CGAL data point.
@@ -114,12 +109,10 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
     auto jarvis_march       {concave::convexHull<concave::AlgorithmHull<concave::Pattern::JarvisMarch>>(cgal_points)};
     auto quick_hull         {concave::convexHull<concave::AlgorithmHull<concave::Pattern::QuickHull>>(cgal_points)};
     auto graham_scan        {concave::convexHull<concave::AlgorithmHull<concave::Pattern::GrahamScan>>(cgal_points)};
-    auto divide_and_conquer {concave::convexHull<concave::AlgorithmHull<concave::Pattern::DivideAndConquer>>(cgal_points)};
 
-    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty() && !divide_and_conquer.empty());
-    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()) && (jarvis_march.size() == divide_and_conquer.size()));
+    EXPECT_TRUE(!jarvis_march.empty() && !quick_hull.empty() && !graham_scan.empty());
+    EXPECT_TRUE((jarvis_march.size() == quick_hull.size()) && (jarvis_march.size() == graham_scan.size()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), quick_hull.begin()));
     EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), graham_scan.begin()));
-    EXPECT_TRUE(std::is_permutation(jarvis_march.begin(), jarvis_march.end(), divide_and_conquer.begin()));
   }
 }

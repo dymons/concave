@@ -3,9 +3,8 @@
 #ifndef CONCAVE_UTILITY_HPP_
 #define CONCAVE_UTILITY_HPP_
 
-#include <iostream>
 #include <cmath>
-#include  <utility>
+#include <utility>
 #include <type_traits>
 
 namespace concave::utility {
@@ -148,40 +147,6 @@ namespace concave::utility {
       }
 
       return Side::StraightLine;
-    }
-
-  template <typename T, typename U>
-    constexpr decltype(auto) tangent (T&& t_rightmost, U&& t_lefthull, T&& t_leftmost, U&& t_righthull) noexcept
-    {
-      // TODO: If all points lie on one straight line, this is an error. throw std::invalid_argument
-
-      auto bound_rightmost {t_rightmost}, bound_leftmost {t_leftmost};
-
-      bool is_find_tangents { true };
-      while (is_find_tangents) {
-        is_find_tangents = false;
-
-        if (bound_rightmost == t_lefthull.end()) {
-          bound_rightmost = t_lefthull.begin();
-        }
-
-        while (utility::orientetion(*bound_leftmost, *bound_rightmost, *std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), bound_rightmost) + 1) % t_lefthull.size()))
-            != utility::Orientation::COUNTERCLOCKWISE) {
-          bound_rightmost = std::next(t_lefthull.begin(), (std::distance(t_lefthull.begin(), bound_rightmost) + 1) % t_lefthull.size());
-        }
-
-        if (bound_leftmost == t_righthull.end()) {
-          bound_leftmost = t_righthull.begin();
-        }
-
-        while (utility::orientetion(*bound_rightmost, *bound_leftmost, *std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), bound_leftmost) - 1) % t_righthull.size()))
-            != utility::Orientation::CLOCKWISE) {
-          bound_leftmost = std::next(t_righthull.begin(), (t_righthull.size() + std::distance(t_righthull.begin(), bound_leftmost) - 1) % t_righthull.size());
-          is_find_tangents = true;
-        }
-      }
-
-      return std::pair{bound_rightmost, bound_leftmost};
     }
 } // namespace concave::utility
 
