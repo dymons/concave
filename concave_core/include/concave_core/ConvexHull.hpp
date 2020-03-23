@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef CONCAVE_CONVEXHULL_HPP_
 #define CONCAVE_CONVEXHULL_HPP_
 

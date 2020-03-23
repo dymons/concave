@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef CONCAVE_UTILITY_HPP_
 #define CONCAVE_UTILITY_HPP_
 
@@ -40,10 +38,10 @@ namespace concave::utility {
     struct is_less<T, R, decltype(std::declval<T>() < std::declval<T>())> : std::true_type {};
 
   template <typename T, typename R = bool>
-    constexpr bool is_less_v = is_less<T, R>::value;
+    inline constexpr bool is_less_v = is_less<T, R>::value;
 
   template <typename T>
-    constexpr decltype(auto) distance (T&& t_f, T&& t_s) noexcept
+    [[nodiscard]] constexpr decltype(auto) distance (T&& t_f, T&& t_s) noexcept
     {
       using TypePoint = std::remove_reference_t<T>;
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -54,7 +52,7 @@ namespace concave::utility {
     }
 
   template <typename T>
-    constexpr decltype(auto) distance (T&& t_f, T&& t_s, T&& t_t) noexcept
+  [[nodiscard]] constexpr decltype(auto) distance (T&& t_f, T&& t_s, T&& t_t) noexcept
     {
       using TypePoint = std::remove_reference_t<T>;
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -65,7 +63,7 @@ namespace concave::utility {
     }
 
   template <typename T>
-    constexpr decltype(auto) orientetion (T&& t_f, T&& t_s, T&& t_t) noexcept
+  [[nodiscard]] constexpr decltype(auto) orientetion (T&& t_f, T&& t_s, T&& t_t) noexcept
     {
       using TypePoint = std::remove_reference_t<T>;
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -96,7 +94,7 @@ namespace concave::utility {
 
   template <typename T>
     struct less_then_x {
-      constexpr decltype(auto) operator() (const T& t_f, const T& t_s) noexcept
+    [[nodiscard]] constexpr decltype(auto) operator() (const T& t_f, const T& t_s) noexcept
       {
         using TypePoint = std::remove_reference_t<T>;
         if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -109,7 +107,7 @@ namespace concave::utility {
 
   template <typename T>
     struct less_then_y {
-      constexpr decltype(auto) operator() (const T& t_f, const T& t_s) noexcept
+    [[nodiscard]] constexpr decltype(auto) operator() (const T& t_f, const T& t_s) noexcept
       {
         using TypePoint = std::remove_reference_t<T>;
         if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -121,7 +119,7 @@ namespace concave::utility {
     };
 
   template <typename T>
-    constexpr decltype(auto) side (T&& t_f, T&& t_s, T&& t_t) noexcept
+  [[nodiscard]] constexpr decltype(auto) side (T&& t_f, T&& t_s, T&& t_t) noexcept
     {
       using TypePoint = std::remove_reference_t<T>;
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {

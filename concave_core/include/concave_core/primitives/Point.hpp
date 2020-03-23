@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef CONCAVE_POINT_HPP_
 #define CONCAVE_POINT_HPP_
 
