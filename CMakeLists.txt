@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project(concave VERSION 1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 2.8)
+
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined --coverage")
+project(concave)
 
 add_subdirectory(concave_core)
 add_subdirectory(concave_test)

@@ -61,3 +61,10 @@ TEST_F(UtilityTests, concavehullcpp_utility_side)
   EXPECT_TRUE(!(concave::utility::side(point_cgal(2,2), point_cgal(0,0), point_cgal(1,0)) == concave::utility::Side::RightSide));
   EXPECT_TRUE(!(concave::utility::side(point_cgal(2,2), point_cgal(0,0), point_cgal(0,1)) == concave::utility::Side::LeftSide));
 }
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
+}
