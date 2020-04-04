@@ -64,8 +64,8 @@ namespace concave {
       static constexpr bool value { T::value == U::value };
     };
 
-  template <typename U, typename T>
-    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<U, AlgorithmHull<Pattern::JarvisMarch>>::value>* = 0)
+  template <auto U, typename T>
+    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::JarvisMarch>>::value>* = 0)
     {
       std::vector<T> convex_hull;
       convex_hull.reserve(t_points.size());
@@ -103,8 +103,8 @@ namespace concave {
       return convex_hull;
     }
 
-  template <typename U, typename T>
-    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<U, AlgorithmHull<Pattern::QuickHull>>::value>* = 0)
+  template <auto U, typename T>
+    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::QuickHull>>::value>* = 0)
     {
       std::vector<T> convex_hull;
       convex_hull.reserve(t_points.size());
@@ -124,8 +124,8 @@ namespace concave {
       return convex_hull;
     }
 
-  template <typename U, typename T>
-    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<U, AlgorithmHull<Pattern::GrahamScan>>::value>* = 0)
+  template <auto U, typename T>
+    std::vector<T> convexHull (const std::vector<T>& t_points, typename std::enable_if_t<is_algorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::GrahamScan>>::value>* = 0)
     {
       std::vector<T> convex_hull;
 
@@ -162,7 +162,7 @@ namespace concave {
   template <typename T>
     std::vector<T> convexHull (const std::vector<T>& t_points)
     {
-      return convexHull<AlgorithmHull<Pattern::GrahamScan>>(t_points);
+      return convexHull<Pattern::GrahamScan>(t_points);
     }
 } // namespace concave
 
