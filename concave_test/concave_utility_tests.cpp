@@ -1,8 +1,10 @@
 #include "concave_core/utility/Utility.hpp"
 #include "concave_core/primitives/Point.hpp"
 
+// Google.Tests
+#include <gtest/gtest.h>
+
 // STL
-#include <iostream>
 #include <type_traits>
 
 // CGAL
@@ -12,59 +14,49 @@
 // OpenCV
 #include <opencv2/core/types.hpp>
 
-#include <gtest/gtest.h>
+// PCL
+#include <pcl/point_types.h>
 
-using point_cgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
+using point_cgal = CGAL::Point_2<CGAL::Cartesian<double>>;
 using point_opencv = cv::Point_<double>;
 
-class UtilityTests : public ::testing::Test { };
+/**
+  * \brief Has a class function member or field 'x | x()' and 'y | y()'
+  */
+template<typename T, typename = void>
+struct has_coordinates : std::false_type {};
 
-TEST_F(UtilityTests, concavehullcpp_utility_function)
+template<typename T>
+struct has_coordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decltype(&T::x)>
+                                                 && std::is_member_pointer_v<decltype(&T::y)>>> : std::true_type {};
+
+template <typename T>
+inline constexpr bool has_coordinates_v = has_coordinates<T>::value;
+
+TEST(UtilityTests, support_types)
 {
-  EXPECT_TRUE(!std::is_member_function_pointer_v<decltype(&concave::primitives::Point<>::x)> && !std::is_member_function_pointer_v<decltype(&concave::primitives::Point<>::y)>); // x/y is data member
-  EXPECT_TRUE(std::is_member_function_pointer_v<decltype(&point_cgal::x)> && std::is_member_function_pointer_v<decltype(&point_cgal::y)>); // x/y is function
-  EXPECT_TRUE(!std::is_member_function_pointer_v<decltype(&point_opencv::x)> && !std::is_member_function_pointer_v<decltype(&point_opencv::y)>); // x/y is data member
+  struct arbitraryType {};
+  ASSERT_FALSE(has_coordinates_v<arbitraryType>);
+
+  struct arbitraryTypeOneField { double x {0.0}; };
+  ASSERT_FALSE(has_coordinates_v<arbitraryTypeOneField>);
+
+  struct arbitraryTypeAnotherField { double x {0.0}; double z {0.0}; };
+  ASSERT_FALSE(has_coordinates_v<arbitraryTypeAnotherField>);
+
+  struct arbitraryTypeCorrectField { double x {0.0}; double y {0.0}; };
+  ASSERT_TRUE(has_coordinates_v<arbitraryTypeCorrectField>);
+
+  ASSERT_TRUE(has_coordinates_v<concave::primitives::Point<>>);
+  ASSERT_TRUE(has_coordinates_v<point_cgal>);
+  ASSERT_TRUE(has_coordinates_v<point_opencv>);
+  ASSERT_TRUE(has_coordinates_v<pcl::PointXYZ>);
+  ASSERT_TRUE(has_coordinates_v<pcl::PointXYZI>);
 }
 
-TEST_F(UtilityTests, concavehullcpp_utility_orientetion)
+int main(int t_argc, char** t_argv)
 {
-  {
-    auto o = concave::utility::orientetion(point_cgal(0,0), point_cgal(4,4), point_cgal(1,2));
-    EXPECT_TRUE(o == concave::utility::Orientation::COUNTERCLOCKWISE);
-  }
-
-  {
-    auto o = concave::utility::orientetion(point_opencv(0,0), point_opencv(4,4), point_opencv(1,2));
-    EXPECT_TRUE(o == concave::utility::Orientation::COUNTERCLOCKWISE);
-  }
-
-  {
-    auto o = concave::utility::orientetion(concave::primitives::Point<>(0,0), concave::primitives::Point<>(4,4), concave::primitives::Point<>(1,2));
-    EXPECT_TRUE(o == concave::utility::Orientation::COUNTERCLOCKWISE);
-  }
-}
-
-TEST_F(UtilityTests, concavehullcpp_utility_less)
-{
-  EXPECT_TRUE(concave::utility::is_less_v<concave::primitives::Point<>>);
-  EXPECT_TRUE(concave::utility::is_less_v<point_cgal>);
-  EXPECT_TRUE(!concave::utility::is_less_v<point_opencv>);
-}
-
-TEST_F(UtilityTests, concavehullcpp_utility_side)
-{
-  EXPECT_TRUE(concave::utility::side(point_cgal(0,0), point_cgal(2,2), point_cgal(1,1)) == concave::utility::Side::StraightLine);
-  EXPECT_TRUE(concave::utility::side(point_cgal(0,0), point_cgal(2,2), point_cgal(1,0)) == concave::utility::Side::RightSide);
-  EXPECT_TRUE(concave::utility::side(point_cgal(0,0), point_cgal(2,2), point_cgal(0,1)) == concave::utility::Side::LeftSide);
-
-  EXPECT_TRUE(concave::utility::side(point_cgal(2,2), point_cgal(0,0), point_cgal(1,1)) == concave::utility::Side::StraightLine);
-  EXPECT_TRUE(!(concave::utility::side(point_cgal(2,2), point_cgal(0,0), point_cgal(1,0)) == concave::utility::Side::RightSide));
-  EXPECT_TRUE(!(concave::utility::side(point_cgal(2,2), point_cgal(0,0), point_cgal(0,1)) == concave::utility::Side::LeftSide));
-}
-
-int main(int argc, char** argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleTest(&t_argc, t_argv);
 
     return RUN_ALL_TESTS();
 }

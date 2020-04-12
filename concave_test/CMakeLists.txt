@@ -4,6 +4,7 @@ project(concave_test)
 find_package(Boost 1.65.1 COMPONENTS filesystem REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(CGAL REQUIRED)
+find_package(PCL REQUIRED)
 
 include(${CGAL_USE_FILE})
 
@@ -27,6 +28,10 @@ if(GTEST_FOUND)
     include_directories(${GTEST_INCLUDE_DIRS})
 endif()
 
+include_directories(include ${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 add_executable(concave_convexhull_tests concave_convexhull_tests.cpp)
 add_to_cached_list(CGAL_EXECUTABLE_TARGETS concave_convexhull_tests)
 target_link_libraries(concave_convexhull_tests
@@ -36,6 +41,7 @@ target_link_libraries(concave_convexhull_tests
                       ${OpenCV_LIBS}
                       ${CGAL_LIBRARIES}
                       ${CGAL_3RD_PARTY_LIBRARIES}
+                      ${PCL_LIBRARIES}
                       )
 add_test(NAME concave_convexhull_tests COMMAND concave_convexhull_tests)
 
@@ -47,5 +53,6 @@ target_link_libraries(concave_utility_tests
                       ${OpenCV_LIBS}
                       ${CGAL_LIBRARIES}
                       ${CGAL_3RD_PARTY_LIBRARIES}
+                      ${PCL_LIBRARIES}
                       )
 add_test(NAME concave_utility_tests COMMAND concave_utility_tests)
