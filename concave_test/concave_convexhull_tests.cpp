@@ -87,6 +87,8 @@ TEST_F(ConvexHullTests, testJarvisMarch)
 // Verifying that all algorithms produce the same result.
 TEST_F(ConvexHullTests, algorithm_equivalence_test)
 {
+  ASSERT_FALSE(m_points.empty());
+
   for (std::size_t i {3}; i < m_points.size(); ++i) {
     std::vector<concave::primitives::Point<double>> buffer {m_points.begin(), std::next(m_points.begin(),i)};
     auto jarvis_march {concave::convexHull<concave::Pattern::JarvisMarch>(buffer)};

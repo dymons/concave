@@ -6,9 +6,26 @@ find_package(OpenCV REQUIRED)
 find_package(CGAL REQUIRED)
 
 include(${CGAL_USE_FILE})
-add_subdirectory("/usr/src/gtest" ${CMAKE_BINARY_DIR}/gtest)
-enable_testing()
-include_directories(${GTEST_INCLUDE_DIRS})
+
+if(NOT GTEST_FOUND)
+    IF(IS_DIRECTORY "/usr/src/gtest/")
+        MESSAGE(STATUS "Found google test sources in /usr/src/gtest/")
+
+        add_subdirectory(/usr/src/gtest/ ${CMAKE_BINARY_DIR}/gtest)
+
+        SET(GTEST_FOUND TRUE)
+        SET(GTEST_BOTH_LIBRARIES gtest gtest_main)
+        SET(GTEST_LIBRARIES gtest)
+        SET(GTEST_MAIN_LIBRARIES gtest_main)
+    ELSE()
+        find_package(GTest)
+    ENDIF()
+endif()
+
+if(GTEST_FOUND)
+    enable_testing()
+    include_directories(${GTEST_INCLUDE_DIRS})
+endif()
 
 add_executable(concave_convexhull_tests concave_convexhull_tests.cpp)
 add_to_cached_list(CGAL_EXECUTABLE_TARGETS concave_convexhull_tests)
