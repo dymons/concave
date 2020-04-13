@@ -6,6 +6,19 @@
 #include <type_traits>
 
 namespace concave::utility {
+  /**
+    * \brief Has a class function member or field 'x | x()' and 'y | y()'
+    */
+  template<typename T, typename = void>
+  struct has_coordinates : std::false_type {};
+
+  template<typename T>
+  struct has_coordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decltype(&T::x)>
+                                                   && std::is_member_pointer_v<decltype(&T::y)>>> : std::true_type {};
+
+  template <typename T>
+  inline constexpr bool has_coordinates_v = has_coordinates<T>::value;
+
   enum class Orientation : std::size_t {
     COUNTERCLOCKWISE,
     CLOCKWISE,
@@ -31,19 +44,12 @@ namespace concave::utility {
     return t_side;
   }
 
-  template <typename T, typename R, typename = R>
-    struct is_less : std::false_type {};
-
-  template <typename T, typename R>
-    struct is_less<T, R, decltype(std::declval<T>() < std::declval<T>())> : std::true_type {};
-
-  template <typename T, typename R = bool>
-    inline constexpr bool is_less_v = is_less<T, R>::value;
-
-  template <typename T>
-    [[nodiscard]] constexpr decltype(auto) distance (T&& t_f, T&& t_s) noexcept
+  template <typename Point>
+    [[nodiscard]] constexpr decltype(auto) distance (Point&& t_f, Point&& t_s) noexcept
     {
-      using TypePoint = std::remove_reference_t<T>;
+      using TypePoint = std::decay_t<Point>;
+      static_assert(has_coordinates_v<TypePoint>);
+
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
         return std::hypot(t_s.x() - t_f.x(), t_s.y() - t_f.y());
       } else {
