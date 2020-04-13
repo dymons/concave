@@ -1,3 +1,10 @@
+/******************************************************************************
+ * \author    Emelyanov Dmitry <dmitriy.emelyanov.de@gmail.com>
+ *
+ * \brief     Helper functions for implementing geometric algorithms
+ *
+ ******************************************************************************/
+
 #ifndef CONCAVE_UTILITY_HPP_
 #define CONCAVE_UTILITY_HPP_
 
@@ -7,7 +14,7 @@
 
 namespace concave::utility {
   /**
-    * \brief Has a class function member or field 'x | x()' and 'y | y()'
+    * \brief        Has a class function member or field 'x | x()' and 'y | y()'
     */
   template<typename T, typename = void>
   struct has_coordinates : std::false_type {};
@@ -44,11 +51,19 @@ namespace concave::utility {
     return t_side;
   }
 
+  /**
+    * \brief        Calculate the Euclidean distance between two points
+    *
+    * \param[in]    t_f - first point
+    * \param[in]    t_s - second point
+    *
+    * \return       The Euclidean distance between two points
+    */
   template <typename Point>
     [[nodiscard]] constexpr decltype(auto) distance (Point&& t_f, Point&& t_s) noexcept
     {
       using TypePoint = std::decay_t<Point>;
-      static_assert(has_coordinates_v<TypePoint>);
+      static_assert(has_coordinates_v<TypePoint>, "Type must have x and y class functions or fields");
 
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
         return std::hypot(t_s.x() - t_f.x(), t_s.y() - t_f.y());
