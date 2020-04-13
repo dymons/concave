@@ -54,13 +54,6 @@ TEST(DistanceTests, check_distance_double)
                 concave::utility::distance(Point{1.0789, -1.123}, Point{4.567, -4.789}),
                 std::numeric_limits<double>::epsilon());
 
-    // Not valid data
-    const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{inf, 0.0}, Point{3.0, 4.0}), inf);
-    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, Point{inf, 4.0}), inf);
-    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, 0.0}, Point{inf, 4.0})));
-    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, Point{inf, inf})));
-
     // Different types
     using PointOpenCV = cv::Point_<double>;
     using PointCGAL = CGAL::Point_2<CGAL::Cartesian<double>>;
@@ -70,6 +63,33 @@ TEST(DistanceTests, check_distance_double)
     EXPECT_DOUBLE_EQ(concave::utility::distance(PointOpenCV{0.0, 0.0}, Point{3.0, 4.0}), 5.0);
     EXPECT_DOUBLE_EQ(concave::utility::distance(PointCGAL{0.0, 0.0}, Point{3.0, -4.0}), 5.0);
     EXPECT_DOUBLE_EQ(concave::utility::distance(pcl::PointXYZ{0.0, 0.0, 0.0}, Point{-3.0, 4.0}), 5.0);
+
+    // Not valid data
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{inf, 0.0}, Point{3.0, 4.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, Point{inf, 4.0}), inf);
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, 0.0}, Point{inf, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, Point{inf, inf})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{nan, 0.0}, Point{3.0, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{0.0, 0.0}, Point{nan, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{nan, 0.0}, Point{nan, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{nan, nan}, Point{nan, nan})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, 0.0}, Point{nan, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, Point{nan, inf})));
+
+    // Not valid data with different types
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{inf, 0.0}, PointOpenCV{3.0, 4.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, PointOpenCV{inf, 4.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{inf, 0.0}, PointCGAL{3.0, 4.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, PointCGAL{inf, 4.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{inf, 0.0}, pcl::PointXYZ{3.0, 4.0, 0.0}), inf);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, pcl::PointXYZ{std::numeric_limits<float>::infinity(), 4.0, 0.0}), inf);
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, 0.0}, PointOpenCV{inf, 4.0})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, PointCGAL{inf, inf})));
+    EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, pcl::PointXYZ{std::numeric_limits<float>::infinity(),
+                                                                                              std::numeric_limits<float>::infinity(),
+                                                                                              std::numeric_limits<float>::infinity()})));
 }
 
 int main(int t_argc, char** t_argv)
