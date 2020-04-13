@@ -18,6 +18,12 @@
 // PCL
 #include <pcl/point_types.h>
 
+template<typename ... Ts>
+auto sum(Ts ... t_ts)
+{
+    return (t_ts + ... + 0);
+}
+
 TEST(UtilityTests, support_types)
 {
   struct arbitraryType {};
@@ -90,6 +96,11 @@ TEST(DistanceTests, check_distance_double)
     EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, pcl::PointXYZ{std::numeric_limits<float>::infinity(),
                                                                                               std::numeric_limits<float>::infinity(),
                                                                                               std::numeric_limits<float>::infinity()})));
+
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{10.0, 10.0}, Point{16.0, 10.0}, Point{13.0, 20.0}),
+                          sum(concave::utility::distance(Point{10.0, 10.0}, Point{16.0, 10.0}),
+                          concave::utility::distance(Point{16.0, 10.0}, Point{13.0, 20.0}),
+                          concave::utility::distance(Point{13.0, 20.0}, Point{10.0, 10.0})));
 }
 
 int main(int t_argc, char** t_argv)

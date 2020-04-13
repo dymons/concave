@@ -63,13 +63,16 @@ namespace concave::utility {
   template <typename PointT, typename PointU>
     [[nodiscard]] constexpr decltype(auto) distance (PointT&& t_f, PointU&& t_s) noexcept
     {
-      static_assert(has_coordinates_v<std::decay_t<PointT>>, "Type must have x and y class functions or fields");
-      static_assert(has_coordinates_v<std::decay_t<PointU>>, "Type must have x and y class functions or fields");
+      using TypePointT = std::decay_t<PointT>;
+      using TypePointU = std::decay_t<PointU>;
 
-      auto xt = std::mem_fn(&PointT::x);
-      auto yt = std::mem_fn(&PointT::y);
-      auto xu = std::mem_fn(&PointU::x);
-      auto yu = std::mem_fn(&PointU::y);
+      static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
+      static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
+
+      auto xt = std::mem_fn(&TypePointT::x);
+      auto yt = std::mem_fn(&TypePointT::y);
+      auto xu = std::mem_fn(&TypePointU::x);
+      auto yu = std::mem_fn(&TypePointU::y);
 
       return std::hypot(xu(t_s) - xt(t_f), yu(t_s) - yt(t_f));
     }
@@ -81,35 +84,36 @@ namespace concave::utility {
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
         return (t_t.y() - t_f.y()) * (t_s.x() - t_f.x()) - (t_s.y() - t_f.y()) * (t_t.x() - t_f.x());
       } else {
-        return (t_t.y - t_f.y) * (t_s.x - t_f.x) - (t_s.y - t_f.y) * (t_t.x - t_f.x);
+        return (t_t.y - t_f.y) * (t_s.x - t_f.x) - (t_t.x - t_f.x) * (t_s.y - t_f.y);
       }
     }
 
-  template <typename T>
-  [[nodiscard]] constexpr decltype(auto) orientetion (T&& t_f, T&& t_s, T&& t_t) noexcept
+  template <typename PointT, typename PointU, typename PointF>
+    [[nodiscard]] constexpr decltype(auto) orientetion (PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
     {
-      using TypePoint = std::remove_reference_t<T>;
-      if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-        auto o = ((t_s.y() - t_f.y()) * (t_t.x() - t_s.x()) - (t_s.x() - t_f.x()) * (t_t.y() - t_s.y()));
+      using TypePointT = std::decay_t<PointT>;
+      using TypePointU = std::decay_t<PointU>;
+      using TypePointF = std::decay_t<PointF>;
 
-        if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
-          return Orientation::COLINEAR;
-        }
+      static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
+      static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
+      static_assert(has_coordinates_v<TypePointF>, "Type must have x and y class functions or fields");
 
-        if (o > 0) {
-          return Orientation::CLOCKWISE;
-        }
+      auto xt = std::mem_fn(&TypePointT::x); // For t_f - t
+      auto yt = std::mem_fn(&TypePointT::y);
+      auto xu = std::mem_fn(&TypePointU::x); // For t_s - u
+      auto yu = std::mem_fn(&TypePointU::y);
+      auto xf = std::mem_fn(&TypePointF::x); // For t_t - f
+      auto yf = std::mem_fn(&TypePointF::y);
 
-      } else {
-        auto o = ((t_s.y - t_f.y) * (t_t.x - t_s.x) - (t_s.x - t_f.x) * (t_t.y - t_s.y));
+      auto o = ((yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)));
 
-        if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
-          return Orientation::COLINEAR;
-        }
+      if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
+        return Orientation::COLINEAR;
+      }
 
-        if (o > 0) {
-          return Orientation::CLOCKWISE;
-        }
+      if (o > 0) {
+        return Orientation::CLOCKWISE;
       }
 
       return Orientation::COUNTERCLOCKWISE;

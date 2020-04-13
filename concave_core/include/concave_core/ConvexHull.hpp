@@ -12,14 +12,19 @@ namespace concave::extension {
   template <typename T, typename U>
     void quickHull (const std::vector<T>& t_points, const typename std::vector<T>::const_iterator& t_leftmost, const typename std::vector<T>::const_iterator& t_rightmost, U&& t_convex_hull)
     {
+      auto x = std::mem_fn(&T::x);
+      auto y = std::mem_fn(&T::y);
+
       // For a part, find the point is_point_far with maximum distance from the line (t_leftmost, t_rightmost).
       auto point_far {t_points.end()};
-      double distance_upper {0.0}, current_distance {0.0}; // TODO: Replace with automatic type detection use type_traits.
+      double upper_distance {0.0}, current_distance {0.0}; // TODO: Replace with automatic type detection use type_traits.
       for (auto it {t_points.begin()}; it != t_points.end(); ++it) {
         if (utility::side(*t_leftmost, *t_rightmost, *it) == utility::Side::LeftSide) {
-          current_distance = std::abs(utility::distance(*t_leftmost, *t_rightmost, *it));
-          if (current_distance > distance_upper) {
-            distance_upper = current_distance;
+          current_distance = (y(*it) - y(t_leftmost)) * (x(t_rightmost) - x(t_leftmost));
+          current_distance -= (y(t_rightmost) - y(t_leftmost)) * (x(*it) - x(t_leftmost));
+          current_distance = std::abs(current_distance);
+          if (current_distance > upper_distance) {
+            upper_distance = current_distance;
             point_far = it;
           }
         }
