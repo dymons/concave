@@ -18,9 +18,6 @@
 // PCL
 #include <pcl/point_types.h>
 
-using point_cgal = CGAL::Point_2<CGAL::Cartesian<double>>;
-using point_opencv = cv::Point_<double>;
-
 TEST(UtilityTests, support_types)
 {
   struct arbitraryType {};
@@ -35,9 +32,11 @@ TEST(UtilityTests, support_types)
   struct arbitraryTypeCorrectField { double x {0.0}; double y {0.0}; };
   ASSERT_TRUE(concave::utility::has_coordinates_v<arbitraryTypeCorrectField>);
 
+  using PointOpenCV = cv::Point_<double>;
+  using PointCGAL = CGAL::Point_2<CGAL::Cartesian<double>>;
   ASSERT_TRUE(concave::utility::has_coordinates_v<concave::primitives::Point<>>);
-  ASSERT_TRUE(concave::utility::has_coordinates_v<point_cgal>);
-  ASSERT_TRUE(concave::utility::has_coordinates_v<point_opencv>);
+  ASSERT_TRUE(concave::utility::has_coordinates_v<PointCGAL>);
+  ASSERT_TRUE(concave::utility::has_coordinates_v<PointOpenCV>);
   ASSERT_TRUE(concave::utility::has_coordinates_v<pcl::PointXYZ>);
   ASSERT_TRUE(concave::utility::has_coordinates_v<pcl::PointXYZI>);
 }
@@ -61,6 +60,16 @@ TEST(DistanceTests, check_distance_double)
     EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, Point{inf, 4.0}), inf);
     EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, 0.0}, Point{inf, 4.0})));
     EXPECT_TRUE(std::isnan(concave::utility::distance(Point{inf, inf}, Point{inf, inf})));
+
+    // Different types
+    using PointOpenCV = cv::Point_<double>;
+    using PointCGAL = CGAL::Point_2<CGAL::Cartesian<double>>;
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, PointOpenCV{3.0, 4.0}), 5.0);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, PointCGAL{3.0, -4.0}), 5.0);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(Point{0.0, 0.0}, pcl::PointXYZ{-3.0, 4.0, 0.0}), 5.0);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(PointOpenCV{0.0, 0.0}, Point{3.0, 4.0}), 5.0);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(PointCGAL{0.0, 0.0}, Point{3.0, -4.0}), 5.0);
+    EXPECT_DOUBLE_EQ(concave::utility::distance(pcl::PointXYZ{0.0, 0.0, 0.0}, Point{-3.0, 4.0}), 5.0);
 }
 
 int main(int t_argc, char** t_argv)

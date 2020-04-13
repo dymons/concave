@@ -10,21 +10,22 @@
 
 #include <cmath>
 #include <utility>
+#include <functional>
 #include <type_traits>
 
 namespace concave::utility {
   /**
     * \brief        Has a class function member or field 'x | x()' and 'y | y()'
     */
-  template<typename T, typename = void>
-  struct has_coordinates : std::false_type {};
-
-  template<typename T>
-  struct has_coordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decltype(&T::x)>
-                                                   && std::is_member_pointer_v<decltype(&T::y)>>> : std::true_type {};
+  template <typename T, typename = void>
+    struct has_coordinates : std::false_type {};
 
   template <typename T>
-  inline constexpr bool has_coordinates_v = has_coordinates<T>::value;
+    struct has_coordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decltype(&T::x)>
+                                                     && std::is_member_pointer_v<decltype(&T::y)>>> : std::true_type {};
+
+  template <typename T>
+    inline constexpr bool has_coordinates_v = has_coordinates<T>::value;
 
   enum class Orientation : std::size_t {
     COUNTERCLOCKWISE,
@@ -59,17 +60,18 @@ namespace concave::utility {
     *
     * \return       The Euclidean distance between two points
     */
-  template <typename Point>
-    [[nodiscard]] constexpr decltype(auto) distance (Point&& t_f, Point&& t_s) noexcept
+  template <typename PointT, typename PointU>
+    [[nodiscard]] constexpr decltype(auto) distance (PointT&& t_f, PointU&& t_s) noexcept
     {
-      using TypePoint = std::decay_t<Point>;
-      static_assert(has_coordinates_v<TypePoint>, "Type must have x and y class functions or fields");
+      static_assert(has_coordinates_v<std::decay_t<PointT>>, "Type must have x and y class functions or fields");
+      static_assert(has_coordinates_v<std::decay_t<PointU>>, "Type must have x and y class functions or fields");
 
-      if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-        return std::hypot(t_s.x() - t_f.x(), t_s.y() - t_f.y());
-      } else {
-        return std::hypot(t_s.x - t_f.x, t_s.y - t_f.y);
-      }
+      auto xt = std::mem_fn(&PointT::x);
+      auto yt = std::mem_fn(&PointT::y);
+      auto xu = std::mem_fn(&PointU::x);
+      auto yu = std::mem_fn(&PointU::y);
+
+      return std::hypot(xu(t_s) - xt(t_f), yu(t_s) - yt(t_f));
     }
 
   template <typename T>
