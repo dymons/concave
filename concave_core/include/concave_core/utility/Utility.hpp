@@ -29,16 +29,18 @@ struct HasCoordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decl
 template<typename T>
 inline constexpr bool has_coordinates_v = HasCoordinates<T>::value;
 
-enum class Orientation : std::size_t {
+enum class Orientation : std::uint8_t {
     COUNTERCLOCKWISE,
     CLOCKWISE,
-    COLINEAR
+    COLINEAR,
+    UNKNOWN
 };
 
-enum class Side : std::size_t {
+enum class Side : std::uint8_t {
     RightSide,
     LeftSide,
-    StraightLine
+    StraightLine,
+    Unknown
 };
 
 inline Side operator~(Side& t_side)
@@ -109,6 +111,10 @@ template<typename PointT, typename PointU, typename PointF>
   // see https://algs4.cs.princeton.edu/91primitives/
   auto o = ((yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)));
 
+  if (std::isnan(o) || std::isinf(o)) {
+    return Orientation::UNKNOWN;
+  }
+
   if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
     return Orientation::COLINEAR;
   }
@@ -118,6 +124,34 @@ template<typename PointT, typename PointU, typename PointF>
   }
 
   return Orientation::COUNTERCLOCKWISE;
+}
+
+/**
+  * \brief        Finding the side on which the point lies
+  *
+  * \param[in]    t_f - first point owned by line
+  * \param[in]    t_s - second point owned by line
+  * \param[in]    t_t - third point, point lying next to the line
+  *
+  * \return       Returns the side with which the point lies relative to the line
+  */
+template<typename PointT, typename PointU, typename PointF>
+[[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
+{
+  // see https://www.geeksforgeeks.org/direction-point-line-segment/
+  switch (auto o = orientetion(t_s, t_f, t_t); o) {
+    case Orientation::UNKNOWN :
+      return Side::Unknown;
+      break;
+    case Orientation::CLOCKWISE :
+      return Side::LeftSide;
+      break;
+    case Orientation::COUNTERCLOCKWISE :
+      return Side::RightSide;
+      break;
+    default:
+      return Side::StraightLine;
+  }
 }
 
 template<typename T>
@@ -156,32 +190,6 @@ struct LessThenY {
     }
   }
 };
-
-/**
-  * \brief        Finding the side on which the point lies
-  *
-  * \param[in]    t_f - first point owned by line
-  * \param[in]    t_s - second point owned by line
-  * \param[in]    t_t - third point, point lying next to the line
-  *
-  * \return       Returns the side with which the point lies relative to the line
-  */
-template<typename PointT, typename PointU, typename PointF>
-[[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
-{
-  // see https://www.geeksforgeeks.org/direction-point-line-segment/
-  auto s = orientetion(t_f, t_s, t_t);
-
-  if (s == Orientation::CLOCKWISE) {
-    return Side::LeftSide;
-  }
-
-  if (s == Orientation::COUNTERCLOCKWISE) {
-    return Side::RightSide;
-  }
-
-  return Side::StraightLine;
-}
 } // namespace concave::utility
 
 #endif //CONCAVE_UTILITY_HPP
