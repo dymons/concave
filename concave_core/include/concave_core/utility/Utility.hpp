@@ -2,7 +2,6 @@
  * \author    Emelyanov Dmitry <dmitriy.emelyanov.de@gmail.com>
  *
  * \brief     Helper functions for implementing geometric algorithms
- *
  ******************************************************************************/
 
 #ifndef CONCAVE_UTILITY_HPP
@@ -30,10 +29,10 @@ template<typename T>
 inline constexpr bool has_coordinates_v = HasCoordinates<T>::value;
 
 enum class Orientation : std::uint8_t {
-    COUNTERCLOCKWISE,
-    CLOCKWISE,
-    COLINEAR,
-    UNKNOWN
+    Counterclockwise,
+    Clockwise,
+    Colinear,
+    Unknown
 };
 
 enum class Side : std::uint8_t {
@@ -112,18 +111,18 @@ template<typename PointT, typename PointU, typename PointF>
   auto o { (yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)) };
 
   if (std::isnan(o) || std::isinf(o)) {
-    return Orientation::UNKNOWN;
+    return Orientation::Unknown;
   }
 
   if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
-    return Orientation::COLINEAR;
+    return Orientation::Colinear;
   }
 
   if (o > 0) {
-    return Orientation::CLOCKWISE;
+    return Orientation::Clockwise;
   }
 
-  return Orientation::COUNTERCLOCKWISE;
+  return Orientation::Counterclockwise;
 }
 
 /**
@@ -140,15 +139,12 @@ template<typename PointT, typename PointU, typename PointF>
 {
   // see https://www.geeksforgeeks.org/direction-point-line-segment/
   switch (auto o { orientetion(t_s, t_f, t_t) }; o) {
-    case Orientation::UNKNOWN :
+    case Orientation::Unknown :
       return Side::Unknown;
-      break;
-    case Orientation::CLOCKWISE :
+    case Orientation::Clockwise :
       return Side::LeftSide;
-      break;
-    case Orientation::COUNTERCLOCKWISE :
+    case Orientation::Counterclockwise :
       return Side::RightSide;
-      break;
     default:
       return Side::StraightLine;
   }

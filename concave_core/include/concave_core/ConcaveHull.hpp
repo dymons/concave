@@ -1,5 +1,11 @@
-#ifndef CONCAVE_CAONCAVEHULL_HPP_
-#define CONCAVE_CAONCAVEHULL_HPP_
+/******************************************************************************
+ * \author    Emelyanov Dmitry <dmitriy.emelyanov.de@gmail.com>
+ *
+ * \brief     All known creation algorithms concave hull
+ ******************************************************************************/
+
+#ifndef CONCAVE_CAONCAVEHULL_HPP
+#define CONCAVE_CAONCAVEHULL_HPP
 
 #include "concave_core/utility/Utility.hpp"
 
@@ -11,4 +17,4 @@ namespace concave {
 
 }  // namespace concave
 
-#endif // CONCAVE_CAONCAVEHULL_HPP_
+#endif // CONCAVE_CAONCAVEHULL_HPP

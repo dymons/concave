@@ -105,18 +105,18 @@ TEST(UtilityTests, check_orientetion)
   using Point = concave::primitives::Point<double>;
 
   EXPECT_EQ(concave::utility::orientetion(Point { 0.0, 0.0 }, Point { 2.0, 0.0 }, Point { 4.0, 0.0 }),
-            concave::utility::Orientation::COLINEAR);
+            concave::utility::Orientation::Colinear);
   EXPECT_EQ(concave::utility::orientetion(Point { 4.0, 5.0 }, Point { 1.0, 2.0 }, Point { 5.0, 1.0 }),
-            concave::utility::Orientation::COUNTERCLOCKWISE);
+            concave::utility::Orientation::Counterclockwise);
   EXPECT_EQ(concave::utility::orientetion(Point { 5.0, 1.0 }, Point { 1.0, 2.0 }, Point { 4.0, 5.0 }),
-            concave::utility::Orientation::CLOCKWISE);
+            concave::utility::Orientation::Clockwise);
 
   const double inf = std::numeric_limits<double>::infinity();
   const double nan = std::numeric_limits<double>::quiet_NaN();
   EXPECT_EQ(concave::utility::orientetion(Point { inf, 0.0 }, Point { 2.0, 0.0 }, Point { 4.0, 0.0 }),
-            concave::utility::Orientation::UNKNOWN);
+            concave::utility::Orientation::Unknown);
   EXPECT_EQ(concave::utility::orientetion(Point { nan, 0.0 }, Point { 2.0, 0.0 }, Point { 4.0, 0.0 }),
-            concave::utility::Orientation::UNKNOWN);
+            concave::utility::Orientation::Unknown);
 }
 
 TEST(UtilityTests, check_side)

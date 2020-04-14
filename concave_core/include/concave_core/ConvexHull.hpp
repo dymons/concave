@@ -1,3 +1,9 @@
+/******************************************************************************
+ * \author    Emelyanov Dmitry <dmitriy.emelyanov.de@gmail.com>
+ *
+ * \brief     All known creation algorithms convex hull
+ ******************************************************************************/
+
 #ifndef CONCAVE_CONVEXHULL_HPP
 #define CONCAVE_CONVEXHULL_HPP
 
@@ -99,7 +105,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
     // Find last triplet (current_point, middle_point, second_point) is counterclockwise.
     for (auto middle_point = t_points.begin(); middle_point != t_points.end(); ++middle_point) {
-      if (utility::orientetion(*current_point, *middle_point, *second_point) == utility::Orientation::COUNTERCLOCKWISE) {
+      if (utility::orientetion(*current_point, *middle_point, *second_point) == utility::Orientation::Counterclockwise) {
         second_point = middle_point;
       }
     }
@@ -153,7 +159,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
   // Sort their points in the polar angle in the counterclockwise direction.
   std::sort(std::next(points_copy.begin()), points_copy.end(), [&](auto& lhs, auto& rhs) {
-    return (utility::orientetion(points_copy.front(), lhs, rhs) == utility::Orientation::COUNTERCLOCKWISE);
+    return (utility::orientetion(points_copy.front(), lhs, rhs) == utility::Orientation::Counterclockwise);
   });
 
   convex_hull.reserve(points_copy.size());
@@ -161,7 +167,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
   for (auto current_point_it { std::next(points_copy.begin(), 3) }; current_point_it != points_copy.end(); ++current_point_it) {
     while (utility::orientetion(*std::next(convex_hull.rbegin()), convex_hull.back(), *current_point_it)
-    != utility::Orientation::COUNTERCLOCKWISE) {
+    != utility::Orientation::Counterclockwise) {
       convex_hull.pop_back();
     }
 

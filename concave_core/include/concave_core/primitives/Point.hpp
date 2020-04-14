@@ -1,3 +1,9 @@
+/******************************************************************************
+ * \author    Emelyanov Dmitry <dmitriy.emelyanov.de@gmail.com>
+ *
+ * \brief     Description of the point primitive
+ ******************************************************************************/
+
 #ifndef CONCAVE_POINT_HPP
 #define CONCAVE_POINT_HPP
 
@@ -9,21 +15,52 @@ namespace concave::primitives {
 template<typename DataPoint = double>
 class Point {
   public:
-    explicit Point(const DataPoint& t_x = 0, const DataPoint& t_y = 0) : x { t_x }, y { t_y }
+    /**
+     * \brief          Custom constructor to initialize a point
+     */
+    explicit Point(DataPoint t_x = 0, DataPoint t_y = 0) : x { t_x }, y { t_y }
     {
     }
+
+    /**
+     * \brief          Check that the current point is equivalent t_other
+     *
+     * \param[in]      t_other - point with which the current compares
+     *
+     * \return         Returns true if the current point is equal t_other, otherwise false
+     */
+    [[nodiscard]] bool operator==(const Point<DataPoint>& t_other) const noexcept;
+
+    /**
+     * \brief          Check that the current point isn't equivalent t_other
+     *
+     * \param[in]      t_other - point with which the current compares
+     *
+     * \return         Returns true if the current point isn't equal t_other, otherwise false
+     */
+    [[nodiscard]] bool operator!=(const Point<DataPoint>& t_other) const noexcept;
+
+    /**
+     * \brief          Check that the current point is less than t_other by coordinates 'y'
+     *
+     * \param[in]      t_other - point with which the current compares
+     *
+     * \return         Returns true if the current point is less than t_other, otherwise false
+     */
+    [[nodiscard]] bool operator<(const Point<DataPoint>& t_other) const noexcept;
+
+    /**
+     * \brief          Check that the current point is greater than t_other by coordinates 'y'
+     *
+     * \param[in]      t_other - point with which the current compares
+     *
+     * \return         Returns true if the current point is greater than t_other, otherwise false
+     */
+    [[nodiscard]] bool operator>(const Point<DataPoint>& t_other) const noexcept;
 
   public:
     DataPoint x;
     DataPoint y;
-
-    bool operator==(const Point<DataPoint>& t_other) const noexcept;
-
-    bool operator!=(const Point<DataPoint>& t_other) const noexcept;
-
-    bool operator<(const Point<DataPoint>& t_other) const noexcept;
-
-    bool operator>(const Point<DataPoint>& t_other) const noexcept;
 };
 
 template<typename DataPoint>
