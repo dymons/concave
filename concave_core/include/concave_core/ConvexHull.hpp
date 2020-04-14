@@ -83,7 +83,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   }
 
   // Find the leftmost point in the point set given to us.
-  const auto leftmost { std::min_element(t_points.begin(), t_points.end(), utility::LessThenY<T> {}) };
+  const auto leftmost { std::min_element(t_points.begin(), t_points.end(), utility::less<T, T>) };
 
   auto current_point { leftmost }, second_point { leftmost };
 
@@ -124,7 +124,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   }
 
   // Find the point with minimum x-coordinate (leftmost), and similarly the point with maximum x-coordinate (rightmost).
-  const auto[leftmost, rightmost] { std::minmax_element(t_points.begin(), t_points.end(), utility::LessThenY<T> {}) };
+  const auto[leftmost, rightmost] { std::minmax_element(t_points.begin(), t_points.end(), utility::less<T, T>) };
 
   // Make a line joining these two points. This line will divide the whole set into two parts.
   extension::quick_hull(t_points, leftmost, rightmost, std::back_inserter(convex_hull)); // For left side
@@ -148,7 +148,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   std::vector<T> points_copy(t_points);
 
   // Find the leftmost point in the point set given to us and swap with begin point.
-  auto leftmost { std::min_element(points_copy.begin(), points_copy.end(), utility::LessThenY<T> {}) };
+  auto leftmost { std::min_element(points_copy.begin(), points_copy.end(), utility::less<T, T>) };
   std::iter_swap(points_copy.begin(), leftmost);
 
   // Sort their points in the polar angle in the counterclockwise direction.

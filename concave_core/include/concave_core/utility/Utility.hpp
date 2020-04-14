@@ -73,10 +73,10 @@ template<typename PointT, typename PointU>
   static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
   static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
 
-  auto xt = std::mem_fn(&TypePointT::x);
-  auto yt = std::mem_fn(&TypePointT::y);
-  auto xu = std::mem_fn(&TypePointU::x);
-  auto yu = std::mem_fn(&TypePointU::y);
+  auto xt { std::mem_fn(&TypePointT::x) };
+  auto yt { std::mem_fn(&TypePointT::y) };
+  auto xu { std::mem_fn(&TypePointU::x) };
+  auto yu { std::mem_fn(&TypePointU::y) };
 
   return std::hypot(xu(t_s) - xt(t_f), yu(t_s) - yt(t_f));
 }
@@ -101,15 +101,15 @@ template<typename PointT, typename PointU, typename PointF>
   static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
   static_assert(has_coordinates_v<TypePointF>, "Type must have x and y class functions or fields");
 
-  auto xt = std::mem_fn(&TypePointT::x); // For t_f - t
-  auto yt = std::mem_fn(&TypePointT::y);
-  auto xu = std::mem_fn(&TypePointU::x); // For t_s - u
-  auto yu = std::mem_fn(&TypePointU::y);
-  auto xf = std::mem_fn(&TypePointF::x); // For t_t - f
-  auto yf = std::mem_fn(&TypePointF::y);
+  auto xt { std::mem_fn(&TypePointT::x) }; // For t_f - t
+  auto yt { std::mem_fn(&TypePointT::y) };
+  auto xu { std::mem_fn(&TypePointU::x) }; // For t_s - u
+  auto yu { std::mem_fn(&TypePointU::y) };
+  auto xf { std::mem_fn(&TypePointF::x) }; // For t_t - f
+  auto yf { std::mem_fn(&TypePointF::y) };
 
   // see https://algs4.cs.princeton.edu/91primitives/
-  auto o = ((yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)));
+  auto o { (yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)) };
 
   if (std::isnan(o) || std::isinf(o)) {
     return Orientation::UNKNOWN;
@@ -139,7 +139,7 @@ template<typename PointT, typename PointU, typename PointF>
 [[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
 {
   // see https://www.geeksforgeeks.org/direction-point-line-segment/
-  switch (auto o = orientetion(t_s, t_f, t_t); o) {
+  switch (auto o { orientetion(t_s, t_f, t_t) }; o) {
     case Orientation::UNKNOWN :
       return Side::Unknown;
       break;
@@ -154,42 +154,28 @@ template<typename PointT, typename PointU, typename PointF>
   }
 }
 
-template<typename T>
-struct LessThenX {
-  [[nodiscard]] constexpr decltype(auto) operator()(const T& t_f, const T& t_s) noexcept
-  {
-    using TypePoint = std::remove_reference_t<T>;
-    if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)>
-    && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-      return (t_f.x() < t_s.x()) ||
-      ((std::abs(t_f.x() - t_s.x()) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x()), decltype(t_s.x())>>::epsilon()) &&
-      t_f.y() < t_s.y());
-    } else {
-      return (t_f.x < t_s.x) || ((
-      std::abs(t_f.x - t_s.x) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x), decltype(t_s.x)>>::epsilon())
-      && t_f.y < t_s.y);
-    }
-  }
-};
+/**
+  * \brief        Estimate that the point t_f is less than t_s
+  *
+  * \param[in]    t_f - first point
+  * \param[in]    t_s - second point
+  *
+  * \return       Returns true if the point t_f is less than t_s
+  */
+template<typename PointT, typename PointU>
+[[nodiscard]] bool less(const PointT& t_f, const PointU& t_s) noexcept
+{
+  static_assert(has_coordinates_v<PointT>, "Type must have x and y class functions or fields");
+  static_assert(has_coordinates_v<PointU>, "Type must have x and y class functions or fields");
 
-template<typename T>
-struct LessThenY {
-  [[nodiscard]] constexpr decltype(auto) operator()(const T& t_f, const T& t_s) noexcept
-  {
-    using TypePoint = std::remove_reference_t<T>;
-    if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)>
-    && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-      return (t_f.y() < t_s.y()) || ((
-      std::abs(t_f.y() - t_s.y())
-      < std::numeric_limits<typename std::common_type_t<decltype(t_f.x()), decltype(t_s.x())>>::epsilon())
-      && t_f.x() < t_s.x());
-    } else {
-      return (t_f.y < t_s.y) || ((
-      std::abs(t_f.y - t_s.y) < std::numeric_limits<typename std::common_type_t<decltype(t_f.x), decltype(t_s.x)>>::epsilon())
-      && t_f.x < t_s.x);
-    }
-  }
-};
+  auto xt { std::mem_fn(&PointT::x) }; // For t_f - t
+  auto yt { std::mem_fn(&PointT::y) };
+  auto xu { std::mem_fn(&PointU::x) }; // For t_s - u
+  auto yu { std::mem_fn(&PointT::y) };
+
+  const auto epsilon { std::numeric_limits<typename std::common_type_t<decltype(xt(t_f)), decltype(xu(t_s))>>::epsilon() };
+  return (yt(t_f) < yu(t_s)) || ((xt(t_f) < xu(t_s)) && ((std::abs(yt(t_f) - yu(t_s)) < epsilon)));
+}
 } // namespace concave::utility
 
 #endif //CONCAVE_UTILITY_HPP
