@@ -79,18 +79,6 @@ template<typename PointT, typename PointU>
   return std::hypot(xu(t_s) - xt(t_f), yu(t_s) - yt(t_f));
 }
 
-template<typename T>
-[[nodiscard]] constexpr decltype(auto) distance(T&& t_f, T&& t_s, T&& t_t) noexcept
-{
-  using TypePoint = std::remove_reference_t<T>;
-  if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)>
-  && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-    return (t_t.y() - t_f.y()) * (t_s.x() - t_f.x()) - (t_s.y() - t_f.y()) * (t_t.x() - t_f.x());
-  } else {
-    return (t_t.y - t_f.y) * (t_s.x - t_f.x) - (t_t.x - t_f.x) * (t_s.y - t_f.y);
-  }
-}
-
 /**
   * \brief        Given three points t_f, t_s, and t_t, determine whether they form a counterclockwise angle.
   *
@@ -169,31 +157,32 @@ struct LessThenY {
   }
 };
 
-template<typename T>
-[[nodiscard]] constexpr decltype(auto) side(T&& t_f, T&& t_s, T&& t_t) noexcept
+template<typename PointT, typename PointU, typename PointF>
+[[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
 {
-  using TypePoint = std::remove_reference_t<T>;
-  if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)>
-  && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
-    auto s = distance(t_f, t_s, t_t);
+  using TypePointT = std::decay_t<PointT>;
+  using TypePointU = std::decay_t<PointU>;
+  using TypePointF = std::decay_t<PointF>;
 
-    if (s > 0) {
-      return Side::LeftSide;
-    }
+  static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
+  static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
+  static_assert(has_coordinates_v<TypePointF>, "Type must have x and y class functions or fields");
 
-    if (s < 0) {
-      return Side::RightSide;
-    }
-  } else {
-    auto s = distance(t_f, t_s, t_t);
+  auto xt = std::mem_fn(&TypePointT::x); // For t_f - t
+  auto yt = std::mem_fn(&TypePointT::y);
+  auto xu = std::mem_fn(&TypePointU::x); // For t_s - u
+  auto yu = std::mem_fn(&TypePointU::y);
+  auto xf = std::mem_fn(&TypePointF::x); // For t_t - f
+  auto yf = std::mem_fn(&TypePointF::y);
 
-    if (s > 0) {
-      return Side::LeftSide;
-    }
+  auto s = (yf(t_t) - yt(t_f)) * (xu(t_s) - xt(t_f)) - (yu(t_s) - yt(t_f)) * (xf(t_t) - xt(t_f));
 
-    if (s < 0) {
-      return Side::RightSide;
-    }
+  if (s > 0) {
+    return Side::LeftSide;
+  }
+
+  if (s < 0) {
+    return Side::RightSide;
   }
 
   return Side::StraightLine;
