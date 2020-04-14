@@ -157,31 +157,26 @@ struct LessThenY {
   }
 };
 
+/**
+  * \brief        Finding the side on which the point lies
+  *
+  * \param[in]    t_f - first point owned by line
+  * \param[in]    t_s - second point owned by line
+  * \param[in]    t_t - third point, point lying next to the line
+  *
+  * \return       Returns the side with which the point lies relative to the line
+  */
 template<typename PointT, typename PointU, typename PointF>
 [[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
 {
-  using TypePointT = std::decay_t<PointT>;
-  using TypePointU = std::decay_t<PointU>;
-  using TypePointF = std::decay_t<PointF>;
+  // see https://www.geeksforgeeks.org/direction-point-line-segment/
+  auto s = orientetion(t_f, t_s, t_t);
 
-  static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<TypePointF>, "Type must have x and y class functions or fields");
-
-  auto xt = std::mem_fn(&TypePointT::x); // For t_f - t
-  auto yt = std::mem_fn(&TypePointT::y);
-  auto xu = std::mem_fn(&TypePointU::x); // For t_s - u
-  auto yu = std::mem_fn(&TypePointU::y);
-  auto xf = std::mem_fn(&TypePointF::x); // For t_t - f
-  auto yf = std::mem_fn(&TypePointF::y);
-
-  auto s = (yf(t_t) - yt(t_f)) * (xu(t_s) - xt(t_f)) - (yu(t_s) - yt(t_f)) * (xf(t_t) - xt(t_f));
-
-  if (s > 0) {
+  if (s == Orientation::CLOCKWISE) {
     return Side::LeftSide;
   }
 
-  if (s < 0) {
+  if (s == Orientation::COUNTERCLOCKWISE) {
     return Side::RightSide;
   }
 
