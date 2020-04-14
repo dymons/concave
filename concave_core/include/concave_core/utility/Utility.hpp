@@ -78,7 +78,7 @@ namespace concave::utility {
     }
 
   template <typename T>
-  [[nodiscard]] constexpr decltype(auto) distance (T&& t_f, T&& t_s, T&& t_t) noexcept
+    [[nodiscard]] constexpr decltype(auto) distance (T&& t_f, T&& t_s, T&& t_t) noexcept
     {
       using TypePoint = std::remove_reference_t<T>;
       if constexpr (std::is_member_function_pointer_v<decltype(&TypePoint::x)> && std::is_member_function_pointer_v<decltype(&TypePoint::y)>) {
@@ -88,6 +88,15 @@ namespace concave::utility {
       }
     }
 
+  /**
+    * \brief        Given three points t_f, t_s, and t_t, determine whether they form a counterclockwise angle.
+    *
+    * \param[in]    t_f - first point
+    * \param[in]    t_s - second point
+    * \param[in]    t_t - third point
+    *
+    * \return       Return angle between three points t_f, t_s, and t_t
+    */
   template <typename PointT, typename PointU, typename PointF>
     [[nodiscard]] constexpr decltype(auto) orientetion (PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
     {
@@ -106,6 +115,7 @@ namespace concave::utility {
       auto xf = std::mem_fn(&TypePointF::x); // For t_t - f
       auto yf = std::mem_fn(&TypePointF::y);
 
+      // see https://algs4.cs.princeton.edu/91primitives/
       auto o = ((yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)));
 
       if (std::abs(o) < std::numeric_limits<decltype(o)>::epsilon()) {
