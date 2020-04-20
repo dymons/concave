@@ -28,6 +28,9 @@ struct HasCoordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decl
 template<typename T>
 inline constexpr bool has_coordinates_v = HasCoordinates<T>::value;
 
+template<typename T, typename = std::enable_if_t<has_coordinates_v<std::decay_t<T>>>>
+using Geometry = T;
+
 enum class Orientation : std::uint8_t {
     Counterclockwise,
     Clockwise,
@@ -64,13 +67,10 @@ inline Side operator~(Side& t_side)
   * \return       The Euclidean distance between two points
   */
 template<typename PointT, typename PointU>
-[[nodiscard]] constexpr decltype(auto) distance(PointT&& t_f, PointU&& t_s) noexcept
+[[nodiscard]] constexpr decltype(auto) distance(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s) noexcept
 {
   using TypePointT = std::decay_t<PointT>;
   using TypePointU = std::decay_t<PointU>;
-
-  static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
 
   auto xt { std::mem_fn(&TypePointT::x) };
   auto yt { std::mem_fn(&TypePointT::y) };
@@ -90,15 +90,11 @@ template<typename PointT, typename PointU>
   * \return       Return angle between three points t_f, t_s, and t_t
   */
 template<typename PointT, typename PointU, typename PointF>
-[[nodiscard]] constexpr decltype(auto) orientetion(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
+[[nodiscard]] constexpr decltype(auto) orientetion(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s, Geometry<PointF>&& t_t) noexcept
 {
   using TypePointT = std::decay_t<PointT>;
   using TypePointU = std::decay_t<PointU>;
   using TypePointF = std::decay_t<PointF>;
-
-  static_assert(has_coordinates_v<TypePointT>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<TypePointU>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<TypePointF>, "Type must have x and y class functions or fields");
 
   auto xt { std::mem_fn(&TypePointT::x) }; // For t_f - t
   auto yt { std::mem_fn(&TypePointT::y) };
@@ -135,7 +131,7 @@ template<typename PointT, typename PointU, typename PointF>
   * \return       Returns the side with which the point lies relative to the line
   */
 template<typename PointT, typename PointU, typename PointF>
-[[nodiscard]] constexpr decltype(auto) side(PointT&& t_f, PointU&& t_s, PointF&& t_t) noexcept
+[[nodiscard]] constexpr decltype(auto) side(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s, Geometry<PointF>&& t_t) noexcept
 {
   // see https://www.geeksforgeeks.org/direction-point-line-segment/
   switch (auto o { orientetion(t_s, t_f, t_t) }; o) {
@@ -159,11 +155,8 @@ template<typename PointT, typename PointU, typename PointF>
   * \return       Returns true if the point t_f is less than t_s
   */
 template<typename PointT, typename PointU>
-[[nodiscard]] bool less(const PointT& t_f, const PointU& t_s) noexcept
+[[nodiscard]] bool less(const Geometry<PointT>& t_f, const Geometry<PointU>& t_s) noexcept
 {
-  static_assert(has_coordinates_v<PointT>, "Type must have x and y class functions or fields");
-  static_assert(has_coordinates_v<PointU>, "Type must have x and y class functions or fields");
-
   auto xt { std::mem_fn(&PointT::x) }; // For t_f - t
   auto yt { std::mem_fn(&PointT::y) };
   auto xu { std::mem_fn(&PointU::x) }; // For t_s - u
