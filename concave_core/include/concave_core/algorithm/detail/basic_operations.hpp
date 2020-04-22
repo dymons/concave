@@ -4,32 +4,16 @@
  * \brief     Helper functions for implementing geometric algorithms
  ******************************************************************************/
 
-#ifndef CONCAVE_UTILITY_HPP
-#define CONCAVE_UTILITY_HPP
+#ifndef CONCAVE_BASIC_OPERATIONS_HPP
+#define CONCAVE_BASIC_OPERATIONS_HPP
+
+#include "concave_core/concept/geometry.hpp"
 
 #include <cmath>
 #include <functional>
-#include <type_traits>
 #include <utility>
 
-namespace concave::utility {
-/**
-  * \brief        Has a class function member or field 'x | x()' and 'y | y()'
-  */
-template<typename T, typename = void>
-struct HasCoordinates : std::false_type {
-};
-
-template<typename T>
-struct HasCoordinates<T, typename std::enable_if_t<std::is_member_pointer_v<decltype(&T::x)>
-                                                   && std::is_member_pointer_v<decltype(&T::y)>>> : std::true_type {
-};
-
-template<typename T>
-inline constexpr bool has_coordinates_v = HasCoordinates<T>::value;
-
-template<typename T, typename = std::enable_if_t<has_coordinates_v<std::decay_t<T>>>>
-using Geometry = T;
+namespace concave {
 
 enum class Orientation : std::uint8_t {
     Counterclockwise,
@@ -165,6 +149,6 @@ template<typename PointT, typename PointU>
   const auto epsilon { std::numeric_limits<typename std::common_type_t<decltype(xt(t_f)), decltype(xu(t_s))>>::epsilon() };
   return (yt(t_f) < yu(t_s)) || ((xt(t_f) < xu(t_s)) && ((std::abs(yt(t_f) - yu(t_s)) < epsilon)));
 }
-} // namespace concave::utility
+} // namespace concave
 
-#endif //CONCAVE_UTILITY_HPP
+#endif //CONCAVE_BASIC_OPERATIONS_HPP

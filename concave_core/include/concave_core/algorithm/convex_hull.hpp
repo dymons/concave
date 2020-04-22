@@ -4,14 +4,14 @@
  * \brief     All known creation algorithms convex hull
  ******************************************************************************/
 
-#ifndef CONCAVE_CONVEXHULL_HPP
-#define CONCAVE_CONVEXHULL_HPP
+#ifndef CONCAVE_CONVEX_HULL_HPP
+#define CONCAVE_CONVEX_HULL_HPP
 
-#include "concave_core/utility/Utility.hpp"
+#include "concave_core/algorithm/detail/basic_operations.hpp"
 
 #include <algorithm>
 #include <stdexcept>
-#include <type_traits>
+
 #include <vector>
 
 namespace concave::extension {
@@ -26,7 +26,7 @@ void quick_hull(const std::vector<T>& t_points, const typename std::vector<T>::c
   auto point_far { t_points.end() };
   double upper_distance { 0.0 }, current_distance { 0.0 }; // TODO: Replace with automatic type detection use type_traits.
   for (auto it { t_points.begin() }; it != t_points.end(); ++it) {
-    if (utility::side(*t_leftmost, *t_rightmost, *it) == utility::Side::LeftSide) {
+    if (side(*t_leftmost, *t_rightmost, *it) == Side::LeftSide) {
       current_distance = (y(*it) - y(t_leftmost)) * (x(t_rightmost) - x(t_leftmost));
       current_distance -= (y(t_rightmost) - y(t_leftmost)) * (x(*it) - x(t_leftmost));
       current_distance = std::abs(current_distance);
@@ -89,7 +89,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   }
 
   // Find the leftmost point in the point set given to us.
-  const auto leftmost { std::min_element(t_points.begin(), t_points.end(), utility::less<T, T>) };
+  const auto leftmost { std::min_element(t_points.begin(), t_points.end(), less<T, T>) };
 
   auto current_point { leftmost }, second_point { leftmost };
 
@@ -105,7 +105,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
     // Find last triplet (current_point, middle_point, second_point) is counterclockwise.
     for (auto middle_point = t_points.begin(); middle_point != t_points.end(); ++middle_point) {
-      if (utility::orientetion(*current_point, *middle_point, *second_point) == utility::Orientation::Counterclockwise) {
+      if (orientetion(*current_point, *middle_point, *second_point) == Orientation::Counterclockwise) {
         second_point = middle_point;
       }
     }
@@ -130,7 +130,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   }
 
   // Find the point with minimum x-coordinate (leftmost), and similarly the point with maximum x-coordinate (rightmost).
-  const auto[leftmost, rightmost] { std::minmax_element(t_points.begin(), t_points.end(), utility::less<T, T>) };
+  const auto[leftmost, rightmost] { std::minmax_element(t_points.begin(), t_points.end(), less<T, T>) };
 
   // Make a line joining these two points. This line will divide the whole set into two parts.
   extension::quick_hull(t_points, leftmost, rightmost, std::back_inserter(convex_hull)); // For left side
@@ -154,20 +154,19 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
   std::vector<T> points_copy(t_points);
 
   // Find the leftmost point in the point set given to us and swap with begin point.
-  auto leftmost { std::min_element(points_copy.begin(), points_copy.end(), utility::less<T, T>) };
+  auto leftmost { std::min_element(points_copy.begin(), points_copy.end(), less<T, T>) };
   std::iter_swap(points_copy.begin(), leftmost);
 
   // Sort their points in the polar angle in the counterclockwise direction.
   std::sort(std::next(points_copy.begin()), points_copy.end(), [&](auto& lhs, auto& rhs) {
-    return (utility::orientetion(points_copy.front(), lhs, rhs) == utility::Orientation::Counterclockwise);
+    return (orientetion(points_copy.front(), lhs, rhs) == Orientation::Counterclockwise);
   });
 
   convex_hull.reserve(points_copy.size());
   convex_hull.insert(convex_hull.end(), points_copy.begin(), std::next(points_copy.begin(), 3));
 
   for (auto current_point_it { std::next(points_copy.begin(), 3) }; current_point_it != points_copy.end(); ++current_point_it) {
-    while (utility::orientetion(*std::next(convex_hull.rbegin()), convex_hull.back(), *current_point_it)
-    != utility::Orientation::Counterclockwise) {
+    while (orientetion(*std::next(convex_hull.rbegin()), convex_hull.back(), *current_point_it) != Orientation::Counterclockwise) {
       convex_hull.pop_back();
     }
 
@@ -185,4 +184,4 @@ std::vector<T> convexHull(const std::vector<T>& t_points)
 }
 } // namespace concave
 
-#endif //CONCAVE_CONVEXHULL_HPP
+#endif //CONCAVE_CONVEX_HULL_HPP

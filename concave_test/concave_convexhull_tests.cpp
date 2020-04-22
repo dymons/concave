@@ -1,5 +1,5 @@
-#include "concave_core/ConvexHull.hpp"
-#include "concave_core/primitives/Point.hpp"
+#include "concave_core/algorithm/convex_hull.hpp"
+#include "concave_core/primitives/point.hpp"
 
 // STL
 #include <algorithm>
