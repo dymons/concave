@@ -10,8 +10,6 @@
 #include "concave_core/algorithm/detail/basic_operations.hpp"
 
 #include <algorithm>
-#include <stdexcept>
-
 #include <vector>
 
 namespace concave::extension {
@@ -24,7 +22,7 @@ void quick_hull(const std::vector<T>& t_points, const typename std::vector<T>::c
 
   // For a part, find the point is_point_far with maximum distance from the line (t_leftmost, t_rightmost).
   auto point_far { t_points.end() };
-  double upper_distance { 0.0 }, current_distance { 0.0 }; // TODO: Replace with automatic type detection use type_traits.
+  double upper_distance { 0.0 }, current_distance { 0.0 };
   for (auto it { t_points.begin() }; it != t_points.end(); ++it) {
     if (side(*t_leftmost, *t_rightmost, *it) == Side::LeftSide) {
       current_distance = (y(*it) - y(t_leftmost)) * (x(t_rightmost) - x(t_leftmost));
@@ -78,8 +76,7 @@ struct IsAlgorithm {
 
 template<auto U, typename T>
 std::vector<T> convexHull(const std::vector<T>& t_points,
-                          typename std::enable_if_t<
-                          IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::JarvisMarch>>::value>*/*unused*/= 0)
+                          typename std::enable_if_t<IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::JarvisMarch>>::value>* = 0)
 {
   std::vector<T> convex_hull;
   convex_hull.reserve(t_points.size());
@@ -120,7 +117,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
 template<auto U, typename T>
 std::vector<T> convexHull(const std::vector<T>& t_points,
-                          typename std::enable_if_t<IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::QuickHull>>::value>*/*unused*/= 0)
+                          typename std::enable_if_t<IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::QuickHull>>::value>* = 0)
 {
   std::vector<T> convex_hull;
   convex_hull.reserve(t_points.size());
@@ -142,8 +139,7 @@ std::vector<T> convexHull(const std::vector<T>& t_points,
 
 template<auto U, typename T>
 std::vector<T> convexHull(const std::vector<T>& t_points,
-                          typename std::enable_if_t<
-                          IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::GrahamScan>>::value>*/*unused*/= 0)
+                          typename std::enable_if_t<IsAlgorithm<AlgorithmHull<U>, AlgorithmHull<Pattern::GrahamScan>>::value>* = 0)
 {
   std::vector<T> convex_hull;
 

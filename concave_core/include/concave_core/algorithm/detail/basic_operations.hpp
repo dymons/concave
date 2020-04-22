@@ -11,7 +11,6 @@
 
 #include <cmath>
 #include <functional>
-#include <utility>
 
 namespace concave {
 

@@ -22,18 +22,6 @@
 using PointCgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
 using PointOpencv = cv::Point_<double>;
 
-template<typename T, typename R, typename P>
-R transform_copy(T t_first_in, T t_last_in, R t_first_out, P t_pred)
-{
-  while (t_first_in != t_last_in) {
-    *t_first_out = t_pred(*t_first_in);
-    ++t_first_out;
-    ++t_first_in;
-  }
-
-  return t_first_out;
-}
-
 namespace CGAL {
 std::istream& operator>>(std::istream& t_istream, PointCgal& t_point)
 {
