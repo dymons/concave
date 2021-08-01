@@ -19,13 +19,34 @@
 // Google test
 #include <gtest/gtest.h>
 
+using OwnPoint = concave::primitives::Point<double>;
 using PointCgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
 using PointOpencv = cv::Point_<double>;
+
+namespace concave {
+namespace detail {
+
+template <>
+struct nth<0, OwnPoint> {
+    inline static auto get(const OwnPoint &t_own_point) {
+        return t_own_point.x;
+    };
+};
+template <>
+struct nth<1, OwnPoint> {
+    inline static auto get(const OwnPoint &t_own_point) {
+        return t_own_point.y;
+    };
+};
+
+} // namespace util
+} // namespace mapbox
 
 namespace CGAL {
 std::istream& operator>>(std::istream& t_istream, PointCgal& t_point)
 {
-  double x { 0.0 }, y { 0.0 };
+  double x { 0.0 };
+  double y { 0.0 };
   t_istream >> x >> y;
   t_point = PointCgal(x, y);
   return t_istream;
@@ -54,7 +75,7 @@ class ConvexHullTests : public ::testing::Test {
     {
     }
 
-    std::vector<concave::primitives::Point<double>> m_points;
+    std::vector<OwnPoint> m_points;
 };
 
 TEST_F(ConvexHullTests, testJarvisMarch)
@@ -62,7 +83,7 @@ TEST_F(ConvexHullTests, testJarvisMarch)
   ASSERT_FALSE(m_points.empty());
 
   /// Check empty data
-  std::vector<concave::primitives::Point<double>> buffer;
+  std::vector<OwnPoint> buffer;
   auto jarvis_march_empty { concave::convexHull<concave::Pattern::JarvisMarch>(buffer) };
   EXPECT_TRUE(jarvis_march_empty.empty());
 
@@ -78,7 +99,7 @@ TEST_F(ConvexHullTests, algorithm_equivalence_test)
   ASSERT_FALSE(m_points.empty());
 
   for (std::size_t i { 3 }; i < m_points.size() - 1; ++i) {
-    std::vector<concave::primitives::Point<double>> buffer { m_points.begin(), std::next(m_points.begin(), i) };
+    std::vector<OwnPoint> buffer { m_points.begin(), std::next(m_points.begin(), i) };
     auto jarvis_march { concave::convexHull<concave::Pattern::JarvisMarch>(buffer) };
     auto quick_hull { concave::convexHull<concave::Pattern::QuickHull>(buffer) };
     auto graham_scan { concave::convexHull<concave::Pattern::GrahamScan>(buffer) };

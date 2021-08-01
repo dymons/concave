@@ -7,12 +7,17 @@
 #ifndef CONCAVE_BASIC_OPERATIONS_HPP
 #define CONCAVE_BASIC_OPERATIONS_HPP
 
-#include "concave_core/concept/geometry.hpp"
-
 #include <cmath>
-#include <functional>
+#include <tuple>
 
 namespace concave {
+
+namespace detail {
+template <std::size_t I, typename T> struct nth {
+  inline static typename std::tuple_element<I, T>::type
+  get(const T& t_t) { return std::get<I>(t_t); };
+};
+} // namespace detail
 
 enum class Orientation : std::uint8_t {
     Counterclockwise,
@@ -50,17 +55,18 @@ inline Side operator~(Side& t_side)
   * \return       The Euclidean distance between two points
   */
 template<typename PointT, typename PointU>
-[[nodiscard]] constexpr decltype(auto) distance(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s) noexcept
+[[nodiscard]] constexpr decltype(auto) distance(PointT&& t_f, PointU&& t_s) noexcept
 {
   using TypePointT = std::decay_t<PointT>;
   using TypePointU = std::decay_t<PointU>;
 
-  auto xt { std::mem_fn(&TypePointT::x) };
-  auto yt { std::mem_fn(&TypePointT::y) };
-  auto xu { std::mem_fn(&TypePointU::x) };
-  auto yu { std::mem_fn(&TypePointU::y) };
+  const auto x1 = detail::nth<0, TypePointT>::get(t_f);
+  const auto y1 = detail::nth<1, TypePointT>::get(t_f);
 
-  return std::hypot(xu(t_s) - xt(t_f), yu(t_s) - yt(t_f));
+  const auto x2 = detail::nth<0, TypePointU>::get(t_s);
+  const auto y2 = detail::nth<1, TypePointU>::get(t_s);
+
+  return std::hypot(x2 - x1, y2 - y1);
 }
 
 /**
@@ -73,21 +79,23 @@ template<typename PointT, typename PointU>
   * \return       Return angle between three points t_f, t_s, and t_t
   */
 template<typename PointT, typename PointU, typename PointF>
-[[nodiscard]] constexpr decltype(auto) orientetion(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s, Geometry<PointF>&& t_t) noexcept
+[[nodiscard]] constexpr decltype(auto) orientetion(const PointT& t_f, const PointU& t_s, const PointF& t_t) noexcept
 {
   using TypePointT = std::decay_t<PointT>;
   using TypePointU = std::decay_t<PointU>;
   using TypePointF = std::decay_t<PointF>;
 
-  auto xt { std::mem_fn(&TypePointT::x) }; // For t_f - t
-  auto yt { std::mem_fn(&TypePointT::y) };
-  auto xu { std::mem_fn(&TypePointU::x) }; // For t_s - u
-  auto yu { std::mem_fn(&TypePointU::y) };
-  auto xf { std::mem_fn(&TypePointF::x) }; // For t_t - f
-  auto yf { std::mem_fn(&TypePointF::y) };
+  const auto xt = detail::nth<0, TypePointT>::get(t_f);
+  const auto yt = detail::nth<1, TypePointT>::get(t_f);
+
+  const auto xu = detail::nth<0, TypePointU>::get(t_s);
+  const auto yu = detail::nth<1, TypePointU>::get(t_s);
+
+  const auto xf = detail::nth<0, TypePointU>::get(t_t);
+  const auto yf = detail::nth<1, TypePointU>::get(t_t);
 
   // see https://algs4.cs.princeton.edu/91primitives/
-  auto o { (yu(t_s) - yt(t_f)) * (xf(t_t) - xu(t_s)) - (xu(t_s) - xt(t_f)) * (yf(t_t) - yu(t_s)) };
+  const auto o { (yu - yt) * (xf - xu) - (xu - xt) * (yf - yu) };
 
   if (std::isnan(o) || std::isinf(o)) {
     return Orientation::Unknown;
@@ -114,7 +122,7 @@ template<typename PointT, typename PointU, typename PointF>
   * \return       Returns the side with which the point lies relative to the line
   */
 template<typename PointT, typename PointU, typename PointF>
-[[nodiscard]] constexpr decltype(auto) side(Geometry<PointT>&& t_f, Geometry<PointU>&& t_s, Geometry<PointF>&& t_t) noexcept
+[[nodiscard]] constexpr decltype(auto) side(const PointT& t_f, const PointU& t_s, const PointF& t_t) noexcept
 {
   // see https://www.geeksforgeeks.org/direction-point-line-segment/
   switch (auto o { orientetion(t_s, t_f, t_t) }; o) {
@@ -124,9 +132,9 @@ template<typename PointT, typename PointU, typename PointF>
       return Side::LeftSide;
     case Orientation::Counterclockwise :
       return Side::RightSide;
-    default:
-      return Side::StraightLine;
   }
+
+  return Side::StraightLine;
 }
 
 /**
@@ -138,15 +146,16 @@ template<typename PointT, typename PointU, typename PointF>
   * \return       Returns true if the point t_f is less than t_s
   */
 template<typename PointT, typename PointU>
-[[nodiscard]] bool less(const Geometry<PointT>& t_f, const Geometry<PointU>& t_s) noexcept
+[[nodiscard]] bool less(const PointT& t_f, const PointU& t_s) noexcept
 {
-  auto xt { std::mem_fn(&PointT::x) }; // For t_f - t
-  auto yt { std::mem_fn(&PointT::y) };
-  auto xu { std::mem_fn(&PointU::x) }; // For t_s - u
-  auto yu { std::mem_fn(&PointT::y) };
+  const auto xt = detail::nth<0, PointT>::get(t_f);
+  const auto yt = detail::nth<1, PointT>::get(t_f);
 
-  const auto epsilon { std::numeric_limits<typename std::common_type_t<decltype(xt(t_f)), decltype(xu(t_s))>>::epsilon() };
-  return (yt(t_f) < yu(t_s)) || ((xt(t_f) < xu(t_s)) && ((std::abs(yt(t_f) - yu(t_s)) < epsilon)));
+  const auto xu = detail::nth<0, PointU>::get(t_s);
+  const auto yu = detail::nth<1, PointU>::get(t_s);
+
+  const auto epsilon { std::numeric_limits<typename std::common_type_t<decltype(xt), decltype(xu)>>::epsilon() };
+  return (yt < yu) || ((xt < xu) && ((std::abs(yt - yu) < epsilon)));
 }
 } // namespace concave
 
