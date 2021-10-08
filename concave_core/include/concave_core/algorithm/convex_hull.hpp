@@ -17,16 +17,20 @@ template<typename T, typename U>
 void quick_hull(const std::vector<T>& t_points, const typename std::vector<T>::const_iterator& t_leftmost,
                 const typename std::vector<T>::const_iterator& t_rightmost, U&& t_convex_hull)
 {
-  auto x = std::mem_fn(&T::x);
-  auto y = std::mem_fn(&T::y);
-
   // For a part, find the point is_point_far with maximum distance from the line (t_leftmost, t_rightmost).
   auto point_far { t_points.end() };
-  double upper_distance { 0.0 }, current_distance { 0.0 };
+  double upper_distance { 0.0 };
+  double current_distance { 0.0 };
   for (auto it { t_points.begin() }; it != t_points.end(); ++it) {
     if (side(*t_leftmost, *t_rightmost, *it) == Side::LeftSide) {
-      current_distance = (y(*it) - y(t_leftmost)) * (x(t_rightmost) - x(t_leftmost));
-      current_distance -= (y(t_rightmost) - y(t_leftmost)) * (x(*it) - x(t_leftmost));
+      const auto current_x = detail::nth<0, T>::get(*it);
+      const auto current_y = detail::nth<1, T>::get(*it);
+      const auto leftmost_x = detail::nth<0, T>::get(*t_leftmost);
+      const auto leftmost_y = detail::nth<1, T>::get(*t_leftmost);
+      const auto rightmost_x = detail::nth<0, T>::get(*t_rightmost);
+      const auto rightmost_y = detail::nth<1, T>::get(*t_rightmost);
+      current_distance = (current_y - leftmost_y) * (rightmost_x - leftmost_x);
+      current_distance -= (rightmost_y - leftmost_y) * (current_x - leftmost_x);
       current_distance = std::abs(current_distance);
       if (current_distance > upper_distance) {
         upper_distance = current_distance;
