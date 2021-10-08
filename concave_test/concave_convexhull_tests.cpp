@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <filesystem>
 
 // CGAL
 #include <CGAL/Cartesian.h>
@@ -13,9 +14,6 @@
 // OpenCV
 #include <opencv2/core/types.hpp>
 
-// Boost
-#include <boost/filesystem.hpp>
-
 // Google test
 #include <gtest/gtest.h>
 
@@ -23,8 +21,7 @@ using OwnPoint = concave::primitives::Point<double>;
 using PointCgal   = CGAL::Point_2<CGAL::Cartesian<double>>;
 using PointOpencv = cv::Point_<double>;
 
-namespace concave {
-namespace detail {
+namespace concave::detail {
 
 template <>
 struct nth<0, OwnPoint> {
@@ -39,8 +36,7 @@ struct nth<1, OwnPoint> {
     };
 };
 
-} // namespace util
-} // namespace mapbox
+} // namespace concave::detail
 
 namespace CGAL {
 std::istream& operator>>(std::istream& t_istream, PointCgal& t_point)
@@ -65,7 +61,7 @@ class ConvexHullTests : public ::testing::Test {
   protected:
     void SetUp() final
     {
-      std::string pointset { boost::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt" };
+      std::string pointset { std::filesystem::current_path().parent_path().string() + "/../concave_test/dataset/pointset_0.txt" };
       std::ifstream is { pointset, std::ios::in };
       std::copy(std::istream_iterator<concave::primitives::Point<double>> { is }, {}, std::back_inserter(m_points));
       is.close();

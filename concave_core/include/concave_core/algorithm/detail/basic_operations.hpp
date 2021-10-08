@@ -19,14 +19,14 @@ template <std::size_t I, typename T> struct nth {
 };
 } // namespace detail
 
-enum class Orientation : std::uint8_t {
+enum class Orientation : unsigned char {
     Counterclockwise,
     Clockwise,
     Colinear,
     Unknown
 };
 
-enum class Side : std::uint8_t {
+enum class Side : unsigned char {
     RightSide,
     LeftSide,
     StraightLine,
